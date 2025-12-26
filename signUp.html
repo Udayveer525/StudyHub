@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Hub Sign-Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00BFA6, #0078FF);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        transform: translateY(50px);
+        opacity: 0;
+        animation: slideUp 1s forwards;
+    }
+
+    @keyframes slideUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 25px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-bottom: 2px solid #ddd;
+        outline: none;
+        font-size: 16px;
+        background: transparent;
+    }
+
+    .form-group label {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        pointer-events: none;
+        transition: 0.3s;
+    }
+
+    .form-group input:focus ~ label,
+    .form-group input:valid ~ label {
+        top: -5px;
+        font-size: 12px;
+        color: #4ecdc4;
+    }
+
+    .form-group input:focus,
+    .form-group input:valid {
+        border-bottom-color: #4ecdc4;
+    }
+
+    button {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(45deg, #4ecdc4, #45b7af);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+    }
+
+    .already-account {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+    }
+
+    .already-account a {
+        color: #4ecdc4;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* Toast container positioning */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+  }
+  
+  /* Toast styling */
+  .toast {
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 3.5s;
+    font-size: 14px;
+  }
+  
+  /* Success toast */
+  .toast.success {
+    background-color: #4CAF50;
+  }
+  
+  /* Error toast */
+  .toast.error {
+    background-color: #F44336;
+  }
+  
+  /* Slide-in animation */
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Fade-out animation */
+  @keyframes fadeOut {
+    to { opacity: 0; }
+  }
+  
+  </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Create Account</h2>
+        <form id="signUp-form">
+            <div class="form-group">
+                <input type="text" required>
+                <label>Full Name</label>
+            </div>
+            <div class="form-group">
+                <input type="text" id="course" required>
+                <label>Course</label>
+            </div>
+            <div class="form-group">
+                <input type="text" id="semester" required>
+                <label>Semester</label>
+            </div>
+            <div class="form-group">
+                <input type="email" required>
+                <label>Email Address</label>
+            </div>
+            <div class="form-group">
+                <input type="password" required>
+                <label>Password</label>
+            </div>
+            <div class="form-group">
+                <input type="password" required>
+                <label>Confirm Password</label>
+            </div>
+            <button type="submit" id="signUp-btn">Sign Up</button>
+        </form>
+
+        <div class="already-account">
+            Already have an account? <a href="signIn.html">Sign In</a>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // Add password match validation
+        const password = document.querySelectorAll('input[type="password"]')[0];
+        const confirmPassword = document.querySelectorAll('input[type="password"]')[1];
+        
+        confirmPassword.addEventListener('input', () => {
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity("Passwords don't match");
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        });
+    </script>
+
+    <script type="module" src="firebaseConfig.js"></script>
+    <script type="module" src="firebaseSignUp.js"></script>
+    <script src="JS/index.js"></script>
+
+</body>
+</html>

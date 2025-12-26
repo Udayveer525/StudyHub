@@ -1,0 +1,193 @@
+.header2 {
+  background-image: url("/Assets/Photos/HeroBg.png");
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url("/Assets/Photos/StudyBg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.hero2 {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+.hero-content2 {
+  text-shadow: 2px 2px #333;
+  max-width: 800px;
+  padding: 20px;
+}
+/* Form Page Styles */
+.study-materials {
+  padding: 50px;
+  text-align: center;
+  background-color: var(--light-accent);
+  color: var(--text-color);
+}
+
+.study-form {
+  display: inline-block;
+  background-color: #dd8e8ec9; /* Matches the intro section */
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.study-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.study-form select,
+.study-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  border: 1px solid var(--primary-color);
+  border-radius: 5px;
+  outline: none;
+}
+
+.study-form button {
+  padding: 10px 20px;
+  background-color: #ff5733; /* Matches your landing page button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.study-form button:hover {
+  background-color: #ff7851;
+}
+
+/* Study Materials Display Section */
+.materials {
+  margin-top: 30px;
+  text-align: left;
+  padding: 20px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: none; /* Hidden until form is submitted */
+}
+
+/* Accordion Styles for Each Material */
+.accordion-item {
+  margin-top: 5px;
+  border: 1px solid #00bfa6;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.accordion-title {
+  width: 100%;
+  padding: 10px;
+  background-color: #00bfa6;
+  color: white;
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.accordion-title:hover {
+  background-color: #00a58f;
+}
+
+.accordion-content {
+  display: none;
+  padding: 10px;
+  background-color: #e0e0e0;
+}
+
+.accordion-content ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.accordion-content ul li {
+  margin: 5px 0;
+}
+
+.acc-arrow {
+  float: right;
+}
+
+.accordion-title .acc-arrow i {
+  transition: transform 0.3s ease;
+}
+
+/* Rotate icon when .active is added to the button */
+.accordion-title.active .acc-arrow i {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 1200px) {
+  .hero2 {
+    height: 80vh;
+  }
+
+  .hero-content2 {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 3rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  .resources {
+    flex-direction: column;
+    align-items: center;
+  }
+  .resource-item {
+    width: 80%;
+    margin-bottom: 20px;
+  }
+}
+
+.credit-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: linear-gradient(135deg, #0077ff6b, #00bfa689);
+  color: #333;
+  text-align: center;
+  border-radius: 10px;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.credit-section p {
+  max-width: 800px;
+  margin: auto;
+  line-height: 1.6;
+}
+
+.credit-section a {
+  color: #fff175;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.credit-section a:hover {
+  text-decoration: underline;
+}
+
+/* Reuse existing styles for buttons, footer, and responsiveness */

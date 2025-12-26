@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile - Study Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/styles.css">  
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+      font-family: 'Poppins', sans-serif;
+    }
+    header {
+      background: linear-gradient(135deg, #00BFA6, #0078FF);
+      text-align: center;
+      color: #fff;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    /* Profile Container */
+    .profile-container {
+      max-width: 600px;
+      background: #fff;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    /* Profile Header */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #0078FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #fff;
+    }
+    .profile-info h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #333;
+    }
+    .profile-info p {
+      margin: 5px 0;
+      color: #777;
+      font-size: 1rem;
+    }
+
+    /* Actions */
+    .profile-actions {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .profile-actions button {
+      background: #00BFA6;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: background 0.3s;
+    }
+    .profile-actions button:hover {
+      background: #0078FF;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 600px) {
+      .profile-container {
+        margin: 20px;
+        padding: 20px;
+      }
+      .profile-header {
+        flex-direction: column;
+        align-items: center;
+      }
+      .avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+      }
+      .profile-info h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <a href="index.html"><img src="Assets/Photos/Smart Owl Logo.png" alt="Study Hub Logo" height="80px"></a>
+    </div>
+    <nav>
+      <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="studyMaterial.html">Study Materials</a></li>
+          <li><a href="index.html#about">About Us</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+  </nav>
+  <div class="hamburger">
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+  </div>
+  </header>
+  <div class="profile-container">
+    <div class="profile-header">
+      <!-- Replace "AB" with user's initials dynamically if needed -->
+      <div class="avatar">AB</div>
+      <div class="profile-info">
+        <h2>No Name</h2>
+        <p>Email: No mail</p>
+        <p>Course: <span id="user-course">Not set</span></p>
+        <p>Semester: <span id="user-semester">Not set</span></p>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button id="edit-btn">Edit Profile</button>
+      <button id="signout-btn">Sign Out</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module" src="JS/index.js"></script>
+  <script type="module" src="JS/profile.js"></script>
+</body>
+</html>

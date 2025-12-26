@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="CSS/styles.css">
+    <link rel="icon" type="image/x-icon" href="Assets/Photos/Owl Face.png">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="header">
+
+
+        <div class="navbar">
+            <div class="logo">
+                <a href="index.html"><img src="Assets/Photos/Smart Owl Logo.png" alt="Study Hub Logo" height="80px"></a>
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="studyMaterial.html">Study Materials</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li class="dropdown">
+                      <a href="#">Community <span class="dropdown-arrow"><i class="fa-solid fa-angle-down"></i></span></a>
+                      <ul class="dropdown-menu">
+                        <li><a href="/community/chat/index.html" target="_blank">Global Chat</a></li>
+                        <li><a href="/community/qna/index.html" target="_blank">Question & Anwers</a></li>
+                      </ul>
+                    </li>
+                    <li><a href="profile.html">Profile</a></li>
+                </ul>
+            </nav>
+            <div class="hamburger">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero">
+            <div class="hero-content">
+                <div id="greeting"></div>
+                <h1>Your Ultimate Study Hub</h1>
+                <p>Notes, PYQ's, E-books, and more</p>
+                <a href="studyMaterial.html" class="btn">Explore Now</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Us Section -->
+    <section id="about" class="about">
+        <h2>What is Study Hub</h2>
+
+        <p id="intro">We are students, just like you. We've been through the grind— hunting for YouTube videos to explain concepts, tracking down PYQs, searching for e-books, making notes...😮‍💨 the list goes on. <br>Yeah, I know how frustrating it is to have to jump from one platform to another just to get your study material. That's exactly why we started this—to put everything you need to study and prepare in one place. <br><br>You're welcome! 😊</p>
+
+        <div class="quote-container">
+            <blockquote class="quote">
+                <p>“I'm in a love-hate relationship with exams. I hate them, but they love to pop up!”</p>
+                <footer>- Anonymous</footer>
+            </blockquote>
+        </div>
+
+        <p>We provide students with the best resources to ace their exams, including notes, past year papers, e-books and much more.</p>
+
+        <div class="resources">
+            <div class="resource-item">
+                <h3>Notes</h3>
+                <p>Comprehensive notes for all courses.</p>
+            </div>
+            <div class="resource-item">
+                <h3>PYQ's</h3>
+                <p>Past year question papers for practice.</p>
+            </div>
+            <div class="resource-item">
+                <h3>E-books</h3>
+                <p>Access to a wide variety of e-books.</p>
+            </div>
+        </div>
+
+        <p>"<b>Anything</b> and <b>everything</b> you need as a student in one place. Is there any thing better 😉"</p>
+        <p class="motivation">What are you waiting for? Start learning.... <br>Good Luck! 👍</p>
+        <div class="quote-container">
+            <blockquote class="quote">
+                <p>“The future belongs to those, who prepare for it today.”</p>
+                <a href="studyMaterial.html"><button id="button">Let's Go</button></a>
+                <footer>- Anonymous</footer>
+            </blockquote>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <h2>Let's Get in Touch</h2>
+        <div class="contact-message">
+            <p><b>Welcome to our growing community of dedicated students!</b> Every resource you find here is <b>freely available</b> to help each of us learn and succeed. As I'm building this project solo, gathering all the materials for every subject and course is quite the task. You might notice some gaps, and that's where you can make a difference! </p>
+            <p>If you spot <b>resources we're missing—or have materials of your own to share—please reach out.</b> By sharing what you know, you're not only enriching your peers' education but also helping to build a supportive, <b>knowledge-sharing network.</b> Together, let's make learning accessible for everyone.   <b>Knowledge truly grows when shared,</b> so let's uplift each other and create a community where every   student has the tools to succeed!"
+            </p>
+        </div><br>
+
+        <div class="contact-container">
+            <form class="contact-form" id="contact-form">
+                <input type="text" name="name" id="name" placeholder="Your Name" required>
+                <input type="email" name="email" id="email" placeholder="Your Email" required>
+                <textarea name="message" id="message" rows="5" placeholder="Your Message" required></textarea>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+            <p id="form-status"></p> 
+
+            <div class="contact-info">
+                <h3>Connect with Us</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#"><i class="fa-regular fa-envelope"></i>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 Study Hub. All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="firebaseConfig.js"></script>
+    <script type="module" src="firebaseSignUp.js"></script>
+    <script type="module" src="JS/header.js"></script>
+    <script type="module" src="JS/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="JS/contact.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+/* Page container */
+.qna-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+
+/* Header Section */
+.qna-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #00bfa6;
+  color: white;
+  padding: 15px 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.qna-header-left,
+.qna-header-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.qna-header-title {
+  flex: 1;
+  text-align: center;
+}
+
+.logo {
+  height: 40px;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  background-color: white;
+  color: #00bfa6;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.login-btn {
+  color: white;
+  background: transparent;
+  border: 2px solid white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.login-btn:hover {
+  background-color: white;
+  color: #00bfa6;
+}
+
+/* Scrollable main area */
+.qna-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f9f9f9;
+}
+
+/* Search bar */
+.qna-search {
+  width: 98%;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Question cards */
+.qna-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.qna-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.qna-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.qna-meta {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 8px;
+}
+
+.qna-desc {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 10px 0 6px;
+  line-height: 1.4;
+  white-space: pre-wrap; /* preserves line breaks */
+}
+
+/* Floating Ask Button */
+.qna-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff5733;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  padding: 12px 20px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  z-index: 100;
+  animation: floaty 2.5s ease-in-out infinite;
+}
+
+.qna-fab:hover {
+  background-color: #e14e2e;
+  transform: scale(1.05);
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* No results */
+.no-results {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+.filter-form {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 400px;
+  margin: 60px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.filter-form h3 {
+  margin-bottom: 16px;
+}
+
+.filter-form select,
+.filter-form button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.filter-form button {
+  background-color: #00bfa6;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.filter-form button:hover {
+  background-color: #009f8a;
+}
