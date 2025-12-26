@@ -1,11 +1,8 @@
 # 🎓 StudyHub - Academic Resource Platform
 
-![Project Status](https://img.shields.io/badge/Status-Live-success)
-![Stack](https://img.shields.io/badge/Tech-Hybrid_Architecture-blueviolet)
-
 **StudyHub** is a comprehensive academic resource platform designed for university students. It bridges the gap between static learning resources (Notes, PYQs) and dynamic peer-to-peer collaboration (Q&A Forum).
 
-🔗 **Live Demo:** [Insert Your Netlify Link Here]
+🔗 **Live Demo:** https://project-study-hub.netlify.app/
 
 ---
 
