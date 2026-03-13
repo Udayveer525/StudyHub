@@ -1,0 +1,405 @@
+Perfect timing.
+You’re thinking like someone who **wants marks and impact**, not just “a working app”.
+
+Let’s plan the frontend the same way we planned the backend: **clear intent, clean flow, zero randomness**.
+
+I’ll give you a **complete frontend blueprint** — pages, navigation, UX decisions, and visual language — without touching code yet.
+
+---
+
+# 🎨 StudyHub Frontend — MASTER PLAN
+
+## Core Design Philosophy (Lock This First)
+
+Your frontend must communicate **3 things within 10 seconds**:
+
+1. This platform is **academic & serious**
+2. It is **modern and thoughtfully designed**
+3. It is **easy to navigate without explanation**
+
+If the evaluator understands it without asking questions → you win.
+
+---
+
+## 🏠 1️⃣ Landing Page (First Impression Page)
+
+This is the **most important page**.
+
+### Purpose
+
+* Introduce StudyHub
+* Show value immediately
+* Encourage login/signup
+
+---
+
+### Layout (Top → Bottom)
+
+#### 🔹 Navbar (Always visible)
+
+* Logo: **StudyHub**
+* Links:
+
+  * Home
+  * Resources
+  * Q&A
+  * Login / Signup (or Profile if logged in)
+
+Clean, minimal, no clutter.
+
+---
+
+#### 🔹 Hero Section (Above the fold)
+
+Big, bold, confident.
+
+**Headline**
+
+> *A smarter way to prepare for exams.*
+
+**Subtext**
+
+> PYQs, curated resources, and a focused academic Q&A — all in one place.
+
+**Primary CTA**
+
+* “Get Started” (Signup)
+* Secondary: “Browse Resources” (No login)
+
+Visual:
+
+* Abstract illustration (books, code, graph, checklist)
+* No stock-photo students (looks cheap)
+
+---
+
+#### 🔹 Feature Highlights (3–4 cards)
+
+* 📚 **Exam-focused resources**
+* 🧠 **Structured Q&A (not a chat)**
+* ⭐ **Community-validated answers**
+* 📊 **Personalized learning dashboard**
+
+Short, scannable.
+
+---
+
+#### 🔹 Preview Section (Trust builder)
+
+Show:
+
+* Sample questions
+* Sample answers
+* Resource cards
+
+This subtly shows **depth**.
+
+---
+
+#### 🔹 Footer
+
+* About
+* Contact
+* Disclaimer (resources are externally hosted)
+* GitHub link (if allowed)
+
+---
+
+## 🔐 2️⃣ Authentication Flow (Simple, Clean)
+
+### Pages
+
+* `/login`
+* `/signup`
+
+### Signup
+
+Minimal fields:
+
+* Name
+* Email
+* Password
+
+Optional note:
+
+> *More personalization available in dashboard.*
+
+Do NOT ask for:
+
+* Phone
+* University
+* Semester
+* Degree
+
+Those go in dashboard later.
+
+---
+
+### Login
+
+* Email
+* Password
+* Remember me (optional visual, but JWT handles this)
+
+### UX Notes
+
+* Clear error messages
+* No popups
+* Full page forms (not modals)
+
+---
+
+## 🧭 3️⃣ Navigation Structure (Very Important)
+
+After login, navigation changes slightly.
+
+### Primary Navigation (Top Bar)
+
+| Item      | Visible to     |
+| --------- | -------------- |
+| Home      | Everyone       |
+| Resources | Everyone       |
+| Q&A       | Everyone       |
+| Dashboard | Logged in only |
+| Profile   | Logged in only |
+
+---
+
+## 📚 4️⃣ Resources Section (Core Academic Value)
+
+### Page: `/resources`
+
+#### Step-by-step flow:
+
+1. Select Degree
+2. Select Semester
+3. Select Subject
+4. See:
+
+   * PYQs
+   * Videos
+   * Notes (later)
+   * Books (later)
+
+### UI Style
+
+* Left side: filters
+* Right side: content cards
+
+Each resource card:
+
+* Title
+* Year
+* Type badge (PYQ / VIDEO)
+* Open link button
+
+No downloads — only links.
+
+---
+
+## ❓ 5️⃣ Q&A Section (Professional, Not Chatty)
+
+### Page: `/questions`
+
+Layout:
+
+* Left: filters (degree, semester, subject)
+* Center: question list
+
+Each question card:
+
+* Title
+* Subject tag
+* Answer count
+* Status badge (Open / Answered)
+
+---
+
+### Ask Question
+
+Button:
+
+> “Ask a Question”
+
+Form:
+
+* Subject (mandatory)
+* Title
+* Description (optional)
+
+No markdown editor initially — plain textarea is fine.
+
+---
+
+### Question Detail Page
+
+* Question at top
+* Answers below
+* Accepted answer highlighted
+* Vote buttons (+ / –)
+* Answer form at bottom (auth only)
+
+This page should feel **serious and focused**.
+
+---
+
+## 📊 6️⃣ Dashboard (Logged-in Users)
+
+This page makes the project feel **premium**.
+
+### Page: `/dashboard`
+
+Show:
+
+* 👤 User name
+* 📌 Saved resources
+* ❓ Questions asked
+* 💬 Answers given
+
+Optional:
+
+* Progress cards
+* Activity timeline
+
+Keep it clean, not crowded.
+
+---
+
+## ⚙️ 7️⃣ Profile Page (Optional but Nice)
+
+Page: `/profile`
+
+Users can:
+
+* Add degree
+* Add semester
+* Add institution
+
+Remember:
+
+> We decided this info is optional.
+
+---
+
+## 🎨 Visual Design Language (Non-Negotiable)
+
+### Color palette
+
+* Primary: Dark blue / Indigo
+* Accent: Teal / Purple
+* Background: Light gray / Off-white
+
+### Typography
+
+* Sans-serif
+* Clear hierarchy
+* Large headings
+
+### UI Feel
+
+* Rounded cards
+* Soft shadows
+* Plenty of spacing
+* Smooth transitions
+
+Think:
+
+> **Academic × Modern SaaS**
+
+---
+
+## 🧠 Tech Stack (Frontend)
+
+Recommended:
+
+* React
+* Vite
+* Tailwind CSS
+* React Router
+* Axios / Fetch
+
+This is:
+
+* Fast to build
+* Modern
+* Very presentable
+
+---
+
+## 🔒 Auth Handling (Frontend Logic)
+
+* Token stored in `localStorage`
+* On app load:
+
+  * Call `/auth/me`
+  * If success → logged in
+  * Else → logout
+
+Protected routes:
+
+* Dashboard
+* Ask Question
+* Answer submission
+
+---
+
+## 🧩 What We Will Build FIRST (Critical)
+
+### Phase 1 (Visual First)
+
+* Landing page
+* Navbar
+* Login / Signup
+* Route structure
+
+This already makes a **huge impression**.
+
+### Phase 2 (Data Integration)
+
+* Resources page
+* Q&A list
+
+---
+
+## 🏁 Final Confirmation
+
+This plan is:
+
+* Clear
+* Impressive
+* Realistic
+* High-scoring
+
+Before we touch code, tell me:
+
+1️⃣ Do you like this overall flow?
+2️⃣ Any page you want to add/remove?
+3️⃣ Do you want a **dark mode** (nice bonus)?
+
+Once confirmed, next we’ll:
+👉 Set up the React project
+👉 Build the landing page first (visual win)
+
+
+
+## APIs endpoints to add later:
+
+GET /api/resources/saved?userId=
+
+POST /api/resources/:id/save
+
+GET /api/resources/recent
+
+GET /api/resources/search?q=
+
+GET /api/institutions
+
+GET /api/degrees?institutionId=
+
+GET /api/semesters?degreeId=
+
+GET /api/subjects?semesterId=
+
+GET /api/resources?subjectId=&type=
+
+GET /api/saved-resources?userId=
