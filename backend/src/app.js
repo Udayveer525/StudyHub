@@ -4,7 +4,7 @@ const app = express();
 const cors = require("cors");
 
 app.use(cors({
-  origin: ["http://localhost:5173", "https://your-studyhub-app.netlify.app"],
+  origin: ["http://localhost:5173", "https://project-study-hub.netlify.app/"],
   credentials: true
 }));
 
