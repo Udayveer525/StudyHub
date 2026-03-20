@@ -1,6 +1,7 @@
 // src/components/AnswerCard.jsx
 import React from "react";
 import { ThumbsUp, ThumbsDown, Check, User, Clock, Shield } from "lucide-react";
+import ReportButton from "./ReportButton";
 
 export default function AnswerCard({
   answer,
@@ -84,9 +85,10 @@ export default function AnswerCard({
 
           {/* Footer Actions */}
           <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-             <div className="text-xs text-gray-400 font-medium">
-               {/* Placeholder for future features like 'Reply' or 'Share' */}
-             </div>
+             <div className="flex items-center gap-2">
+              {/* Report Button */}
+              <ReportButton targetType="answer" targetId={answer.id} />
+            </div>
              
              {canAccept && !isAccepted && (
               <button

@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, Clock, User, CheckCircle, AlertCircle } from "lucide-react";
+import ReportButton from "./ReportButton";
 
 export default function QuestionCard({ q }) {
   const isResolved = q.status === "resolved";
@@ -84,6 +85,9 @@ export default function QuestionCard({ q }) {
             {isResolved ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
             {q.status}
           </div>
+
+          {/* Report Button */}
+          <ReportButton targetType="question" targetId={q.id} />
         </div>
       </div>
     </Link>

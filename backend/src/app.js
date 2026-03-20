@@ -24,6 +24,8 @@ const questionRoutes = require("./routes/question.routes");
 const answerRoutes = require("./routes/answer.routes");
 
 const contactRoutes = require("./routes/contact.routes");
+const reportRoutes = require("./routes/report.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 app.use("/api/institutions", institutionRoutes);
 app.use("/api/degrees", degreeRoutes);
@@ -40,6 +42,8 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/answers", answerRoutes);
 
 app.use("/api/contact", contactRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
 app.get("/", (req, res) => {
