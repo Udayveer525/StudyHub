@@ -27,15 +27,16 @@ const STATUS_TABS = [
 const CATEGORY_LABELS = {
   "resource-contribution": "Resource",
   "bug-report": "Bug Report",
-  "general": "General",
-  "other": "Other",
+  general: "General",
+  other: "Other",
 };
 
 const CATEGORY_COLORS = {
-  "resource-contribution": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  "resource-contribution":
+    "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
   "bug-report": "text-red-400 bg-red-500/10 border-red-500/20",
-  "general": "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  "other": "text-gray-400 bg-gray-500/10 border-gray-500/20",
+  general: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  other: "text-gray-400 bg-gray-500/10 border-gray-500/20",
 };
 
 function CategoryBadge({ category }) {
@@ -51,7 +52,13 @@ function CategoryBadge({ category }) {
 }
 
 // Slide-in detail drawer for a single submission
-function SubmissionDrawer({ submission, onClose, onDismiss, onApprove, dismissLoading }) {
+function SubmissionDrawer({
+  submission,
+  onClose,
+  onDismiss,
+  onApprove,
+  dismissLoading,
+}) {
   const isResourceContribution =
     submission?.category === "resource-contribution";
 
@@ -67,7 +74,9 @@ function SubmissionDrawer({ submission, onClose, onDismiss, onApprove, dismissLo
         {/* Drawer Header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4 sticky top-0 bg-gray-900 z-10">
           <div>
-            <h3 className="text-sm font-bold text-white">Submission #{submission.id}</h3>
+            <h3 className="text-sm font-bold text-white">
+              Submission #{submission.id}
+            </h3>
             <p className="text-[11px] text-gray-500">
               {new Date(submission.created_at).toLocaleString()}
             </p>
@@ -89,11 +98,12 @@ function SubmissionDrawer({ submission, onClose, onDismiss, onApprove, dismissLo
             <div className="flex items-center gap-2 text-sm text-gray-300">
               <User className="h-3.5 w-3.5 text-gray-600" />
               {submission.name}
-              {submission.user_name && submission.user_name !== submission.name && (
-                <span className="text-xs text-gray-600">
-                  (account: {submission.user_name})
-                </span>
-              )}
+              {submission.user_name &&
+                submission.user_name !== submission.name && (
+                  <span className="text-xs text-gray-600">
+                    (account: {submission.user_name})
+                  </span>
+                )}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Mail className="h-3.5 w-3.5 text-gray-600" />
@@ -152,7 +162,9 @@ function SubmissionDrawer({ submission, onClose, onDismiss, onApprove, dismissLo
                 Admin Notes
               </p>
               <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <p className="text-sm text-amber-300">{submission.admin_notes}</p>
+                <p className="text-sm text-amber-300">
+                  {submission.admin_notes}
+                </p>
               </div>
             </div>
           )}
@@ -166,7 +178,10 @@ function SubmissionDrawer({ submission, onClose, onDismiss, onApprove, dismissLo
                   {submission.status}
                 </span>
                 {submission.reviewed_at && (
-                  <> on {new Date(submission.reviewed_at).toLocaleDateString()}</>
+                  <>
+                    {" "}
+                    on {new Date(submission.reviewed_at).toLocaleDateString()}
+                  </>
                 )}
               </p>
             </div>
@@ -219,7 +234,7 @@ export default function AdminSubmissions() {
       const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE_URL}/api/admin/submissions?status=${status}&page=${page}&limit=15`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!res.ok) throw new Error("Failed to fetch submissions");
       const data = await res.json();
@@ -254,7 +269,7 @@ export default function AdminSubmissions() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ admin_notes: "" }),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to dismiss");
       setSelectedSubmission(null);
@@ -293,7 +308,9 @@ export default function AdminSubmissions() {
           onClick={fetchSubmissions}
           className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-white/20 hover:text-gray-200"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </button>
       </div>
@@ -325,18 +342,33 @@ export default function AdminSubmissions() {
       <div className="overflow-hidden rounded-xl border border-white/8 bg-gray-900">
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-3 border-b border-white/8 bg-white/3 px-4 py-3">
-          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">ID</div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">From</div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">Category</div>
-          <div className="col-span-4 text-[10px] font-mono uppercase tracking-widest text-gray-600">Message</div>
-          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">Status</div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">Actions</div>
+          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            ID
+          </div>
+          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            From
+          </div>
+          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            Category
+          </div>
+          <div className="col-span-4 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            Message
+          </div>
+          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            Status
+          </div>
+          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+            Actions
+          </div>
         </div>
 
         {loading ? (
           <div className="space-y-px">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 w-full animate-pulse bg-gray-800/50" />
+              <div
+                key={i}
+                className="h-16 w-full animate-pulse bg-gray-800/50"
+              />
             ))}
           </div>
         ) : submissions.length === 0 ? (
@@ -344,7 +376,9 @@ export default function AdminSubmissions() {
             <Inbox className="h-8 w-8 text-gray-700 mb-3" />
             <p className="text-sm font-medium text-gray-500">Inbox is empty</p>
             <p className="text-xs text-gray-700 mt-1">
-              {status === "pending" ? "No pending submissions." : `No ${status} submissions.`}
+              {status === "pending"
+                ? "No pending submissions."
+                : `No ${status} submissions.`}
             </p>
           </div>
         ) : (
@@ -356,11 +390,17 @@ export default function AdminSubmissions() {
                 onClick={() => setSelectedSubmission(sub)}
               >
                 <div className="col-span-1">
-                  <span className="font-mono text-xs text-gray-600">#{sub.id}</span>
+                  <span className="font-mono text-xs text-gray-600">
+                    #{sub.id}
+                  </span>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-xs font-medium text-gray-300 truncate">{sub.name}</p>
-                  <p className="text-[10px] text-gray-600 truncate">{sub.email}</p>
+                  <p className="text-xs font-medium text-gray-300 truncate">
+                    {sub.name}
+                  </p>
+                  <p className="text-[10px] text-gray-600 truncate">
+                    {sub.email}
+                  </p>
                 </div>
                 <div className="col-span-2">
                   <CategoryBadge category={sub.category} />
@@ -371,20 +411,27 @@ export default function AdminSubmissions() {
                   )}
                 </div>
                 <div className="col-span-4">
-                  <p className="text-xs text-gray-400 line-clamp-2">{sub.message}</p>
+                  <p className="text-xs text-gray-400 line-clamp-2">
+                    {sub.message}
+                  </p>
                   <p className="mt-1 text-[10px] text-gray-700">
                     {new Date(sub.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="col-span-1">
-                  <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold capitalize ${statusBadge(sub.status)}`}>
+                  <span
+                    className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold capitalize ${statusBadge(sub.status)}`}
+                  >
                     {sub.status}
                   </span>
                 </div>
-                <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="col-span-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {sub.status === "pending" ? (
                     <div className="flex flex-col gap-1.5">
-                      {sub.category === "resource-contribution" && (
+                      {sub.category === "resource" && (
                         <button
                           onClick={() => setApproveTarget(sub)}
                           className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20"

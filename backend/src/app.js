@@ -24,8 +24,8 @@ const questionRoutes = require("./routes/question.routes");
 const answerRoutes = require("./routes/answer.routes");
 
 const contactRoutes = require("./routes/contact.routes");
-const reportRoutes = require("./routes/report.routes");
 const adminRoutes = require("./routes/admin.routes");
+const reportRoutes = require("./routes/report.routes");
 
 app.use("/api/institutions", institutionRoutes);
 app.use("/api/degrees", degreeRoutes);
