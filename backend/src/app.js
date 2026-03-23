@@ -50,4 +50,12 @@ app.get("/", (req, res) => {
   res.send("StudyHub API is running");
 });
 
+// Health Check Endpoint for UptimeRobot
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'success', 
+    message: 'StudyHub API is awake and healthy!' 
+  });
+});
+
 module.exports = app;
