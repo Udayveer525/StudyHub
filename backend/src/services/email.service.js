@@ -1,6 +1,6 @@
 // // services/email.service.js
 
-// // RENDER VERSION
+// // RESEND VERSION
 
 // const { Resend } = require("resend");
 
