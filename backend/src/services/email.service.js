@@ -212,13 +212,12 @@
 // BREVO VERSION
 
 // services/email.service.js
-const brevo = require("@getbrevo/brevo");
+const { BrevoClient } = require("@getbrevo/brevo");
 
-let defaultClient = brevo.ApiClient.instance;
-let apiKey = defaultClient.authentications["api-key"];
-apiKey.apiKey = process.env.BREVO_API_KEY;
-
-const apiInstance = new brevo.TransactionalEmailsApi();
+// 1. Initialize the new modern client
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
+});
 
 const FROM_EMAIL = process.env.GMAIL_USER; // Your Gmail
 const FRONTEND = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -288,19 +287,19 @@ const card = (content) =>
 // ─── Internal send helper ─────────────────────────────────────────────────────
 
 async function send({ to, subject, html }) {
-  let sendSmtpEmail = new brevo.SendSmtpEmail();
-  
-  sendSmtpEmail.subject = subject;
-  sendSmtpEmail.htmlContent = html;
-  sendSmtpEmail.sender = { name: "StudyHub Team", email: FROM_EMAIL };
-  sendSmtpEmail.to = [{ email: to }];
-
   try {
-    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log("Email sent successfully via Brevo HTTP API!");
+    // 2. Use the new sendTransacEmail method
+    const data = await brevo.transactionalEmails.sendTransacEmail({
+      subject: subject,
+      htmlContent: html,
+      sender: { name: "StudyHub Team", email: FROM_EMAIL },
+      to: [{ email: to }]
+    });
+    
+    console.log(`✅ Email sent successfully to ${to} via Brevo HTTP API!`);
     return data;
   } catch (error) {
-    console.error("Failed to send email:", error);
+    console.error("❌ Failed to send email via Brevo:", error);
     throw error;
   }
 }
