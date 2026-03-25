@@ -223,7 +223,7 @@ const apiInstance = new brevo.TransactionalEmailsApi();
 const FROM_EMAIL = process.env.GMAIL_USER; // Your Gmail
 const FRONTEND = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
+// ─── Shared styles ───────────────────────────────────────────────────────────
 
 const baseTemplate = (content) => `
 <!DOCTYPE html>
