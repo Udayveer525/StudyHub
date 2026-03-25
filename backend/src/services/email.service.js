@@ -23,7 +23,7 @@
 //     <tr>
 //       <td align="center">
 //         <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,42,71,0.10);">
-          
+
 //           <!-- Header -->
 //           <tr>
 //             <td style="background:#0F2A47;padding:28px 36px;">
@@ -209,24 +209,18 @@
 //   });
 // };
 
-
-// NODEMAILER VERSION
+// BREVO VERSION
 
 // services/email.service.js
-const nodemailer = require("nodemailer");
+const brevo = require("@getbrevo/brevo");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  family: 4, // Force IPv4 — Render free tier doesn't support IPv6
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+let defaultClient = brevo.ApiClient.instance;
+let apiKey = defaultClient.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-const FROM = `StudyHub <${process.env.GMAIL_USER}>`;
+const apiInstance = new brevo.TransactionalEmailsApi();
+
+const FROM_EMAIL = process.env.GMAIL_USER; // Your Gmail
 const FRONTEND = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -294,7 +288,21 @@ const card = (content) =>
 // ─── Internal send helper ─────────────────────────────────────────────────────
 
 async function send({ to, subject, html }) {
-  await transporter.sendMail({ from: FROM, to, subject, html });
+  let sendSmtpEmail = new brevo.SendSmtpEmail();
+  
+  sendSmtpEmail.subject = subject;
+  sendSmtpEmail.htmlContent = html;
+  sendSmtpEmail.sender = { name: "StudyHub Team", email: FROM_EMAIL };
+  sendSmtpEmail.to = [{ email: to }];
+
+  try {
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("Email sent successfully via Brevo HTTP API!");
+    return data;
+  } catch (error) {
+    console.error("Failed to send email:", error);
+    throw error;
+  }
 }
 
 // ─── Email senders ────────────────────────────────────────────────────────────
@@ -338,7 +346,13 @@ exports.sendWelcomeEmail = async (to, name) => {
   });
 };
 
-exports.sendNewAnswerEmail = async (to, authorName, questionTitle, questionId, answererName) => {
+exports.sendNewAnswerEmail = async (
+  to,
+  authorName,
+  questionTitle,
+  questionId,
+  answererName,
+) => {
   const link = `${FRONTEND}/questions/${questionId}`;
   await send({
     to,
@@ -356,7 +370,12 @@ exports.sendNewAnswerEmail = async (to, authorName, questionTitle, questionId, a
   });
 };
 
-exports.sendAnswerAcceptedEmail = async (to, answererName, questionTitle, questionId) => {
+exports.sendAnswerAcceptedEmail = async (
+  to,
+  answererName,
+  questionTitle,
+  questionId,
+) => {
   const link = `${FRONTEND}/questions/${questionId}`;
   await send({
     to,
@@ -376,8 +395,8 @@ exports.sendAnswerAcceptedEmail = async (to, answererName, questionTitle, questi
 
 exports.sendPromotionEmail = async (to, name, newTitle, level) => {
   const TITLE_COLORS = {
-    "Helper": "#10B981",
-    "Contributor": "#3B82F6",
+    Helper: "#10B981",
+    Contributor: "#3B82F6",
     "Knowledge Ally": "#8B5CF6",
     "Subject Guide": "#F59E0B",
     "Trusted Mentor": "#EF4444",
