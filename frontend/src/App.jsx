@@ -22,6 +22,7 @@ import QuestionThread from "./pages/QuestionThread";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import ContactPage from "./pages/ContactPage";
+import VerifyEmail from "./pages/VerifyEmail";
 
 // Admin Pages
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -29,10 +30,57 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSubmissions from "./pages/admin/AdminSubmissions";
 
+// Main app shell — renders Navbar above all student-facing pages
+function MainLayout() {
+  return (
+    <div className="min-h-screen bg-background-light font-sans text-slate-800 selection:bg-brand-accent/20 selection:text-brand-deep">
+      <Navbar />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <Hero />
+              <Features />
+              <Contact />
+              <Footer />
+            </>
+          }
+        />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/resources" element={<Resources />} />
+        <Route path="/questions" element={<Questions />} />
+        <Route
+          path="/questions/ask"
+          element={
+            <ProtectedRoute>
+              <AskQuestion />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/questions/:id" element={<QuestionThread />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
-      {/* Admin Panel — completely isolated, no Navbar/Footer */}
+      {/* Admin panel — fully isolated, no Navbar/Footer */}
       <Route
         path="/admin"
         element={
@@ -46,52 +94,8 @@ export default function App() {
         <Route path="submissions" element={<AdminSubmissions />} />
       </Route>
 
-      {/* Main App — with Navbar */}
-      <Route
-        path="/*"
-        element={
-          <div className="min-h-screen bg-background-light font-sans text-slate-800 selection:bg-brand-accent/20 selection:text-brand-deep">
-            <Navbar />
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <Hero />
-                    <Features />
-                    <Contact />
-                    <Footer />
-                  </>
-                }
-              />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/questions" element={<Questions />} />
-              <Route path="/questions/:id" element={<QuestionThread />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/questions/ask"
-                element={
-                  <ProtectedRoute>
-                    <AskQuestion />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </div>
-        }
-      />
+      {/* All student-facing routes under MainLayout */}
+      <Route path="/*" element={<MainLayout />} />
     </Routes>
   );
 }

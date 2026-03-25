@@ -1,11 +1,11 @@
 // src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, LogIn, AlertCircle } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
+import { Link as RouterLink } from "react-router-dom";
 
-// Make sure to put your mascot image in public/assets/
 const MASCOT_IMAGE = "/owl-mascot.png";
 
 export default function Login() {
@@ -14,8 +14,10 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
@@ -31,10 +33,16 @@ export default function Login() {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      if (!res.ok) {
+        if (data.code === "EMAIL_NOT_VERIFIED") {
+          setUnverifiedEmail(data.email || email);
+          throw new Error(data.error);
+        }
+        throw new Error(data.error || "Login failed");
+      }
 
       login(data.token);
-      setTimeout(() => navigate("/dashboard"), 100);
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Invalid credentials. Please try again.");
     } finally {
@@ -45,12 +53,12 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background-light p-4 font-sans">
       <div className="flex w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-        {/* BRAND SIDEBAR (Hidden on mobile) */}
+
+        {/* BRAND SIDEBAR */}
         <div className="hidden w-1/2 flex-col justify-between bg-brand-deep p-12 text-white md:flex">
           <div>
             <div className="flex items-center gap-2 font-bold text-xl tracking-wider">
-              <div className="h-8 w-8 rounded-lg bg-brand-accent"></div>{" "}
-              {/* Simple Logo Placeholder */}
+              <div className="h-8 w-8 rounded-lg bg-brand-accent"></div>
               StudyHub
             </div>
             <div className="mt-12">
@@ -63,20 +71,16 @@ export default function Login() {
               </p>
             </div>
           </div>
-
-          {/* Mascot Display */}
           <div className="flex justify-center">
             <div className="relative h-48 w-48 opacity-80">
-              {/* Replace src with your actual image path */}
               <img
                 src={MASCOT_IMAGE}
                 alt="StudyHub Mascot"
                 className="h-full w-full object-contain"
-                onError={(e) => (e.target.style.display = "none")} // Hides if image missing
+                onError={(e) => (e.target.style.display = "none")}
               />
             </div>
           </div>
-
           <div className="text-xs text-blue-300">
             © 2026 StudyHub. All rights reserved.
           </div>
@@ -94,13 +98,26 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              {error}
+            <div className="mb-6 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+              {unverifiedEmail && (
+                <div className="mt-2 pl-8">
+                  <RouterLink
+                    to={`/verify-email?resend=${unverifiedEmail}`}
+                    className="text-xs font-bold text-brand-accent underline underline-offset-2"
+                  >
+                    Resend verification email →
+                  </RouterLink>
+                </div>
+              )}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase tracking-wide text-gray-500">
                 Email Address
@@ -118,6 +135,7 @@ export default function Login() {
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wide text-gray-500">
@@ -133,16 +151,29 @@ export default function Login() {
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
-                  className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm font-medium text-brand-deep placeholder:text-gray-400 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 outline-none transition-all"
+                  className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-11 text-sm font-medium text-brand-deep placeholder:text-gray-400 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 outline-none transition-all"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-brand-deep transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword
+                    ? <EyeOff className="h-4 w-4" />
+                    : <Eye className="h-4 w-4" />
+                  }
+                </button>
               </div>
             </div>
 
+            {/* Remember me */}
             <div className="flex items-center">
               <input
                 id="remember"
@@ -151,10 +182,7 @@ export default function Login() {
                 checked={remember}
                 onChange={() => setRemember(!remember)}
               />
-              <label
-                htmlFor="remember"
-                className="ml-2 block text-sm text-gray-600"
-              >
+              <label htmlFor="remember" className="ml-2 block text-sm text-gray-600">
                 Keep me logged in
               </label>
             </div>
@@ -167,7 +195,7 @@ export default function Login() {
                 <span className="animate-pulse">Signing in...</span>
               ) : (
                 <>
-                  Sign In{" "}
+                  Sign In
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </>
               )}

@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 
+const { sendNewAnswerEmail, sendAnswerAcceptedEmail } = require("../services/email.service"); 
+
 // voteValue expected: 1 or -1
 exports.voteAnswer = async (req, res) => {
   const answerId = req.params.id;
@@ -63,11 +65,21 @@ exports.acceptAnswer = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // find answer and question
+    // Fetch answer, question, and all user info needed for emails in one query
     const ansRes = await client.query(
-      `SELECT a.id, a.question_id, q.user_id AS question_owner
+      `SELECT
+        a.id,
+        a.question_id,
+        a.user_id AS answerer_id,
+        q.user_id AS question_owner,
+        q.title AS question_title,
+        answerer.name AS answerer_name,
+        answerer.email AS answerer_email,
+        asker.email AS asker_email
        FROM answers a
        JOIN questions q ON a.question_id = q.id
+       JOIN users answerer ON a.user_id = answerer.id
+       JOIN users asker ON q.user_id = asker.id
        WHERE a.id = $1
        FOR UPDATE`,
       [answerId]
@@ -78,7 +90,14 @@ exports.acceptAnswer = async (req, res) => {
       return res.status(404).json({ error: "Answer not found" });
     }
 
-    const { question_id: questionId, question_owner: questionOwner } = ansRes.rows[0];
+    const {
+      question_id: questionId,
+      question_owner: questionOwner,
+      question_title: questionTitle,
+      answerer_id: answererId,
+      answerer_name: answererName,
+      answerer_email: answererEmail,
+    } = ansRes.rows[0];
 
     // only question owner can accept
     if (questionOwner !== userId) {
@@ -96,9 +115,18 @@ exports.acceptAnswer = async (req, res) => {
     await client.query("UPDATE questions SET status = 'resolved' WHERE id = $1", [questionId]);
 
     // Update title
-    await updateUserTitle(userId);
+    await updateUserTitle(answererId, client);
 
     await client.query("COMMIT");
+
+    // Send email to answerer — fire and forget after commit
+    sendAnswerAcceptedEmail(
+      answererEmail,
+      answererName,
+      questionTitle,
+      questionId
+    ).catch((err) => console.error("Failed to send answer accepted email:", err));
+    
     return res.json({ message: "Answer accepted" });
   } catch (err) {
     await client.query("ROLLBACK");

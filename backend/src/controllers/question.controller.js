@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { sendNewAnswerEmail } = require("../services/email.service");
 
 // Helper: basic sanitization/validation
 function validateQuestionInput(title, subjectId) {
@@ -189,18 +190,28 @@ exports.addAnswer = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // verify question exists
+    // verify question exists and grab info needed for notification email
     const qRes = await client.query(
-      "SELECT id FROM questions WHERE id = $1 FOR UPDATE",
+      `SELECT q.id, q.title, q.user_id, q.status, u.email AS author_email, u.name AS author_name
+       FROM questions q JOIN users u ON q.user_id = u.id
+       WHERE q.id = $1 FOR UPDATE`,
       [qid],
     );
     if (qRes.rows.length === 0) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Question not found" });
     }
-    if (qRes.status === "resolved") {
+    if (qRes.rows[0].status === "resolved") {
+      await client.query("ROLLBACK");
       return res.status(400).json({ error: "Question is resolved" });
     }
+
+    // Fetch answerer name for the notification email
+    const answererRes = await client.query(
+      "SELECT name FROM users WHERE id = $1",
+      [userId]
+    );
+    const answererName = answererRes.rows[0]?.name ?? "A fellow student";
 
     const insert = await client.query(
       `INSERT INTO answers (question_id, user_id, content, is_accepted)
@@ -216,6 +227,19 @@ exports.addAnswer = async (req, res) => {
     );
 
     await client.query("COMMIT");
+
+    // Notify question author — only if they are not the one answering their own question
+    const question = qRes.rows[0];
+    if (question.user_id !== userId) {
+      sendNewAnswerEmail(
+        question.author_email,
+        question.author_name,
+        question.title,
+        qid,
+        answererName
+      ).catch((err) => console.error("Failed to send new answer email:", err));
+    }
+
     return res
       .status(201)
       .json({ id: insert.rows[0].id, created_at: insert.rows[0].created_at });
