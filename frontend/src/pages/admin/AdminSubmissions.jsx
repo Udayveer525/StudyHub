@@ -211,7 +211,7 @@ function SubmissionDrawer({
                 Attachment
               </p>
               <a
-                href={`${API_BASE_URL}/${submission.attachment_path}`}
+                href={submission.attachment_path}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-brand-accent/20 bg-brand-accent/5 px-3 py-2 text-sm text-brand-accent hover:bg-brand-accent/10 transition-colors"

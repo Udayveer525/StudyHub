@@ -320,7 +320,7 @@ function ResourceCard({ resource }) {
             rel="noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-50 py-2 text-sm font-bold text-brand-mid transition-colors hover:bg-brand-deep hover:text-white"
           >
-            {isLink ? "Open Link" : "Download"}
+            {isLink ? "Open Link" : "View"}
             {isLink ? (
               <ExternalLink className="h-3 w-3" />
             ) : (

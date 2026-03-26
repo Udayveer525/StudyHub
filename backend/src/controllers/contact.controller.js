@@ -7,7 +7,12 @@ exports.submitContactForm = async (req, res) => {
   try {
     const { name, email, category, message } = req.body;
     const userId = req.user?.userId || null;
-    const attachmentPath = req.file ? req.file.path : null;
+    // Build full URL so the frontend can link directly to the file on the backend server
+    // req.file.path is a relative path like "uploads/filename.pdf"
+    const backendUrl = process.env.BACKEND_URL || "";
+    const attachmentPath = req.file
+      ? `${backendUrl}/${req.file.path.replace(/\\/g, "/")}`
+      : null;
 
     if (!name || !email || !category) {
       return res.status(400).json({ error: "Missing required fields" });
