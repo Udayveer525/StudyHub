@@ -389,30 +389,30 @@ exports.approveSubmission = async (req, res) => {
   } finally {
     client.release();
   }
+};
 
-  exports.dismissSubmission = async (req, res) => {
-    const submissionId = req.params.id;
-    const { admin_notes } = req.body;
+exports.dismissSubmission = async (req, res) => {
+  const submissionId = req.params.id;
+  const { admin_notes } = req.body;
 
-    try {
-      const result = await pool.query(
-        `UPDATE contact_submissions
+  try {
+    const result = await pool.query(
+      `UPDATE contact_submissions
        SET status = 'dismissed', reviewed_at = NOW(), admin_notes = $1
        WHERE id = $2 AND status = 'pending'
        RETURNING id`,
-        [admin_notes?.trim() || null, submissionId],
-      );
+      [admin_notes?.trim() || null, submissionId],
+    );
 
-      if (result.rows.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "Submission not found or already reviewed" });
-      }
-
-      res.json({ message: "Submission dismissed" });
-    } catch (err) {
-      console.error("admin.dismissSubmission:", err);
-      res.status(500).json({ error: "Failed to dismiss submission" });
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Submission not found or already reviewed" });
     }
-  };
+
+    res.json({ message: "Submission dismissed" });
+  } catch (err) {
+    console.error("admin.dismissSubmission:", err);
+    res.status(500).json({ error: "Failed to dismiss submission" });
+  }
 };
