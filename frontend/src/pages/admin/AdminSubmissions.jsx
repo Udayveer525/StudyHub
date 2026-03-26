@@ -16,6 +16,8 @@ import {
   Tag,
   Hash,
   Calendar,
+  GraduationCap,
+  CalendarDays,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
 
@@ -117,21 +119,52 @@ function SubmissionDrawer({
                 Resource Details
               </p>
 
+              {/* Course mapping */}
+              {(submission.degree_name ||
+                submission.semester_number ||
+                submission.subject_name) && (
+                <div className="rounded-lg bg-white/5 border border-white/8 px-3 py-2.5 space-y-1.5">
+                  {submission.degree_name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <GraduationCap className="h-3.5 w-3.5 text-gray-600 shrink-0" />
+                      <span className="text-gray-400 shrink-0">Degree:</span>
+                      <span className="font-semibold text-gray-200">
+                        {submission.degree_name}
+                      </span>
+                    </div>
+                  )}
+                  {submission.semester_number && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CalendarDays className="h-3.5 w-3.5 text-gray-600 shrink-0" />
+                      <span className="text-gray-400 shrink-0">Semester:</span>
+                      <span className="font-semibold text-gray-200">
+                        Semester {submission.semester_number}
+                      </span>
+                    </div>
+                  )}
+                  {submission.subject_name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Hash className="h-3.5 w-3.5 text-gray-600 shrink-0" />
+                      <span className="text-gray-400 shrink-0">Subject:</span>
+                      <span className="font-semibold text-gray-200">
+                        {submission.subject_code && (
+                          <span className="text-gray-500 mr-1">
+                            {submission.subject_code} —
+                          </span>
+                        )}
+                        {submission.subject_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {submission.resource_type && (
                 <div className="flex items-center gap-2 text-sm">
                   <Tag className="h-3.5 w-3.5 text-gray-600" />
                   <span className="text-gray-400">Type:</span>
                   <span className="font-semibold text-gray-200">
                     {submission.resource_type}
-                  </span>
-                </div>
-              )}
-              {submission.subject_name && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Hash className="h-3.5 w-3.5 text-gray-600" />
-                  <span className="text-gray-400">Subject:</span>
-                  <span className="font-semibold text-gray-200">
-                    {submission.subject_name}
                   </span>
                 </div>
               )}

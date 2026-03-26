@@ -256,10 +256,15 @@ exports.listSubmissions = async (req, res) => {
         cs.resource_url,
         cs.resource_year,
         u.name AS user_name,
-        s.name AS subject_name
+        s.name AS subject_name,
+        s.code AS subject_code,
+        sem.number AS semester_number,
+        d.name AS degree_name
        FROM contact_submissions cs
        LEFT JOIN users u ON cs.user_id = u.id
        LEFT JOIN subjects s ON cs.subject_id = s.id
+       LEFT JOIN semesters sem ON s.semester_id = sem.id
+       LEFT JOIN degrees d ON sem.degree_id = d.id
        ${whereClause}
        ORDER BY cs.created_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
