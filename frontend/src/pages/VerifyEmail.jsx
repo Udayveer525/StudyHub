@@ -1,11 +1,12 @@
 // src/pages/VerifyEmail.jsx
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
 import { API_BASE_URL } from "../config/api";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const token = searchParams.get("token");
 
   const [status, setStatus] = useState("loading"); // loading | success | error
@@ -23,25 +24,27 @@ export default function VerifyEmail() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Verification failed");
         setStatus("success");
-        setMessage(data.message);
+        // Redirect to login with a flag so it can show a success banner
+        setTimeout(() => navigate("/login?verified=true"), 2500);
       })
       .catch((err) => {
         setStatus("error");
         setMessage(err.message);
       });
-  }, [token]);
+  }, [token, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background-light p-4 font-sans">
       <div className="w-full max-w-md rounded-2xl bg-white p-10 shadow-2xl text-center">
-        
         {/* Loading */}
         {status === "loading" && (
           <>
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand-accent/10">
               <Loader2 className="h-8 w-8 animate-spin text-brand-accent" />
             </div>
-            <h1 className="text-xl font-bold text-brand-deep">Verifying your email...</h1>
+            <h1 className="text-xl font-bold text-brand-deep">
+              Verifying your email...
+            </h1>
             <p className="mt-2 text-sm text-gray-500">Just a moment.</p>
           </>
         )}
@@ -52,15 +55,26 @@ export default function VerifyEmail() {
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-8 w-8 text-emerald-500" />
             </div>
-            <h1 className="text-2xl font-bold text-brand-deep">Email Verified!</h1>
+            <h1 className="text-2xl font-bold text-brand-deep">
+              Email Verified!
+            </h1>
             <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-              Your account is now active. Welcome to StudyHub!
+              Your account is active. Redirecting you to login...
             </p>
+            <div className="mt-6 flex justify-center gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-1.5 w-1.5 rounded-full bg-brand-accent animate-bounce"
+                  style={{ animationDelay: `${i * 150}ms` }}
+                />
+              ))}
+            </div>
             <Link
-              to="/login"
-              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-brand-accent px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-600 hover:shadow-blue-500/40"
+              to="/login?verified=true"
+              className="mt-6 inline-block text-xs text-gray-400 hover:text-brand-accent"
             >
-              Sign In to Your Account
+              Click here if not redirected
             </Link>
           </>
         )}
@@ -72,20 +86,20 @@ export default function VerifyEmail() {
               <XCircle className="h-8 w-8 text-red-500" />
             </div>
             <h1 className="text-2xl font-bold text-brand-deep">Link Invalid</h1>
-            <p className="mt-3 text-sm text-gray-500 leading-relaxed">{message}</p>
+            <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+              {message}
+            </p>
             <p className="mt-2 text-sm text-gray-400">
               The link may have expired or already been used.
             </p>
             <ResendForm />
           </>
         )}
-
       </div>
     </div>
   );
 }
 
-// Inline resend form shown on error
 function ResendForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -100,10 +114,10 @@ function ResendForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      setSent(true);
     } catch {
-      setSent(true); // Still show success to prevent enumeration
+      // Intentionally silent — always show success to prevent email enumeration
     } finally {
+      setSent(true);
       setLoading(false);
     }
   };
@@ -112,7 +126,8 @@ function ResendForm() {
     return (
       <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
         <p className="text-sm font-semibold text-emerald-600">
-          ✓ If that email is registered and unverified, a new link is on its way.
+          ✓ If that email is registered and unverified, a new link is on its
+          way.
         </p>
       </div>
     );

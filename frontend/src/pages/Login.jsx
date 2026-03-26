@@ -1,28 +1,45 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  CheckCircle,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
-import { Link as RouterLink } from "react-router-dom";
 
 const MASCOT_IMAGE = "/owl-mascot.png";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Show success banner if coming from email verification
+  const justVerified = searchParams.get("verified") === "true";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState(null);
-  const [unverifiedEmail, setUnverifiedEmail] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // For the inline resend flow
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setUnverifiedEmail(null);
+    setResendSent(false);
     setLoading(true);
 
     try {
@@ -33,9 +50,10 @@ export default function Login() {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         if (data.code === "EMAIL_NOT_VERIFIED") {
-          setUnverifiedEmail(data.email || email);
+          setUnverifiedEmail(email);
           throw new Error(data.error);
         }
         throw new Error(data.error || "Login failed");
@@ -50,10 +68,26 @@ export default function Login() {
     }
   }
 
+  async function handleResend() {
+    if (!unverifiedEmail || resendLoading || resendSent) return;
+    setResendLoading(true);
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+    } catch {
+      // Intentionally silent
+    } finally {
+      setResendSent(true);
+      setResendLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background-light p-4 font-sans">
       <div className="flex w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-
         {/* BRAND SIDEBAR */}
         <div className="hidden w-1/2 flex-col justify-between bg-brand-deep p-12 text-white md:flex">
           <div>
@@ -97,20 +131,47 @@ export default function Login() {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>{error}</span>
+          {/* ── Email just verified banner ── */}
+          {justVerified && (
+            <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
+              <div>
+                <p className="text-sm font-bold text-emerald-700">
+                  Email verified!
+                </p>
+                <p className="text-xs text-emerald-600">
+                  Your account is active. Sign in below.
+                </p>
               </div>
+            </div>
+          )}
+
+          {/* ── Error banner ── */}
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-100 bg-red-50 p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+
+              {/* Inline resend — only shown for unverified accounts */}
               {unverifiedEmail && (
-                <div className="mt-2 pl-8">
-                  <RouterLink
-                    to={`/verify-email?resend=${unverifiedEmail}`}
-                    className="text-xs font-bold text-brand-accent underline underline-offset-2"
-                  >
-                    Resend verification email →
-                  </RouterLink>
+                <div className="mt-3 border-t border-red-100 pt-3 pl-8">
+                  {resendSent ? (
+                    <p className="text-xs font-semibold text-emerald-600">
+                      ✓ Verification email sent — check your inbox.
+                    </p>
+                  ) : (
+                    <button
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      className="text-xs font-bold text-brand-accent hover:underline disabled:opacity-60"
+                    >
+                      {resendLoading
+                        ? "Sending..."
+                        : "Resend verification email →"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -160,15 +221,16 @@ export default function Login() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-brand-deep transition-colors"
                   tabIndex={-1}
+                  onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-brand-deep transition-colors"
                 >
-                  {showPassword
-                    ? <EyeOff className="h-4 w-4" />
-                    : <Eye className="h-4 w-4" />
-                  }
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -182,7 +244,10 @@ export default function Login() {
                 checked={remember}
                 onChange={() => setRemember(!remember)}
               />
-              <label htmlFor="remember" className="ml-2 block text-sm text-gray-600">
+              <label
+                htmlFor="remember"
+                className="ml-2 block text-sm text-gray-600"
+              >
                 Keep me logged in
               </label>
             </div>

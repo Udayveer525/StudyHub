@@ -1,6 +1,6 @@
 // // services/email.service.js
 
-// // RESEND VERSION
+// // RESEND VERSION (to be used when we buy a domain)
 
 // const { Resend } = require("resend");
 
@@ -208,6 +208,7 @@
 //     `),
 //   });
 // };
+
 
 // BREVO VERSION
 

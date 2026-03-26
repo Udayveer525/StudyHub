@@ -17,8 +17,12 @@ exports.getStats = async (req, res) => {
       pool.query("SELECT COUNT(*)::int AS count FROM questions"),
       pool.query("SELECT COUNT(*)::int AS count FROM answers"),
       pool.query("SELECT COUNT(*)::int AS count FROM resources"),
-      pool.query("SELECT COUNT(*)::int AS count FROM reports WHERE status = 'pending'"),
-      pool.query("SELECT COUNT(*)::int AS count FROM contact_submissions WHERE status = 'pending'"),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM reports WHERE status = 'pending'",
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM contact_submissions WHERE status = 'pending'",
+      ),
     ]);
 
     res.json({
@@ -45,7 +49,8 @@ exports.listReports = async (req, res) => {
   const safeStatus = validStatuses.includes(status) ? status : "pending";
 
   try {
-    let whereClause = safeStatus !== "all" ? `WHERE r.status = '${safeStatus}'` : "";
+    let whereClause =
+      safeStatus !== "all" ? `WHERE r.status = '${safeStatus}'` : "";
 
     const reportsRes = await pool.query(
       `SELECT
@@ -62,11 +67,11 @@ exports.listReports = async (req, res) => {
        ${whereClause}
        ORDER BY r.created_at DESC
        LIMIT $1 OFFSET $2`,
-      [parseInt(limit, 10), offset]
+      [parseInt(limit, 10), offset],
     );
 
     const countRes = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM reports r ${whereClause}`
+      `SELECT COUNT(*)::int AS total FROM reports r ${whereClause}`,
     );
 
     // For each report, fetch a preview of the reported content
@@ -80,7 +85,7 @@ exports.listReports = async (req, res) => {
                FROM questions q
                JOIN users u ON q.user_id = u.id
                WHERE q.id = $1`,
-              [report.target_id]
+              [report.target_id],
             );
             contentPreview = q.rows[0] || null;
           } else if (report.target_type === "answer") {
@@ -89,7 +94,7 @@ exports.listReports = async (req, res) => {
                FROM answers a
                JOIN users u ON a.user_id = u.id
                WHERE a.id = $1`,
-              [report.target_id]
+              [report.target_id],
             );
             contentPreview = a.rows[0] || null;
           } else if (report.target_type === "resource") {
@@ -99,7 +104,7 @@ exports.listReports = async (req, res) => {
                JOIN resource_types rt ON r.resource_type = rt.id
                JOIN subjects s ON r.subject_id = s.id
                WHERE r.id = $1`,
-              [report.target_id]
+              [report.target_id],
             );
             contentPreview = r.rows[0] || null;
           }
@@ -109,7 +114,7 @@ exports.listReports = async (req, res) => {
         }
 
         return { ...report, contentPreview };
-      })
+      }),
     );
 
     res.json({
@@ -134,7 +139,7 @@ exports.resolveReport = async (req, res) => {
     // Fetch the report
     const reportRes = await client.query(
       "SELECT * FROM reports WHERE id = $1 FOR UPDATE",
-      [reportId]
+      [reportId],
     );
 
     if (reportRes.rows.length === 0) {
@@ -151,18 +156,24 @@ exports.resolveReport = async (req, res) => {
 
     // Delete the reported content
     if (report.target_type === "question") {
-      await client.query("DELETE FROM questions WHERE id = $1", [report.target_id]);
+      await client.query("DELETE FROM questions WHERE id = $1", [
+        report.target_id,
+      ]);
     } else if (report.target_type === "answer") {
-      await client.query("DELETE FROM answers WHERE id = $1", [report.target_id]);
+      await client.query("DELETE FROM answers WHERE id = $1", [
+        report.target_id,
+      ]);
     } else if (report.target_type === "resource") {
-      await client.query("DELETE FROM resources WHERE id = $1", [report.target_id]);
+      await client.query("DELETE FROM resources WHERE id = $1", [
+        report.target_id,
+      ]);
     }
 
     // Mark all reports for this content as resolved (others may have reported same thing)
     await client.query(
       `UPDATE reports SET status = 'resolved'
        WHERE target_type = $1 AND target_id = $2`,
-      [report.target_type, report.target_id]
+      [report.target_type, report.target_id],
     );
 
     await client.query("COMMIT");
@@ -184,11 +195,13 @@ exports.dismissReport = async (req, res) => {
       `UPDATE reports SET status = 'dismissed'
        WHERE id = $1 AND status = 'pending'
        RETURNING id`,
-      [reportId]
+      [reportId],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Report not found or already actioned" });
+      return res
+        .status(404)
+        .json({ error: "Report not found or already actioned" });
     }
 
     res.json({ message: "Report dismissed" });
@@ -238,18 +251,24 @@ exports.listSubmissions = async (req, res) => {
         cs.created_at,
         cs.reviewed_at,
         cs.admin_notes,
-        u.name AS user_name
+        cs.subject_id,
+        cs.resource_type,
+        cs.resource_url,
+        cs.resource_year,
+        u.name AS user_name,
+        s.name AS subject_name
        FROM contact_submissions cs
        LEFT JOIN users u ON cs.user_id = u.id
+       LEFT JOIN subjects s ON cs.subject_id = s.id
        ${whereClause}
        ORDER BY cs.created_at DESC
        LIMIT $${idx++} OFFSET $${idx++}`,
-      dataParams
+      dataParams,
     );
 
     const countRes = await pool.query(
       `SELECT COUNT(*)::int AS total FROM contact_submissions cs ${whereClause}`,
-      params
+      params,
     );
 
     res.json({
@@ -266,23 +285,16 @@ exports.listSubmissions = async (req, res) => {
 
 exports.approveSubmission = async (req, res) => {
   const submissionId = req.params.id;
-  const { title, url, subjectId, resourceType, year, admin_notes } = req.body;
-
-  // Validate required fields
-  if (!title || !url || !subjectId || !resourceType) {
-    return res.status(400).json({
-      error: "title, url, subjectId, and resourceType are required",
-    });
-  }
+  const { admin_notes } = req.body; // Admin can optionally add notes, nothing else needed
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Verify submission exists and is pending
+    // Fetch submission — all resource metadata was collected at submission time
     const subRes = await client.query(
       "SELECT * FROM contact_submissions WHERE id = $1 FOR UPDATE",
-      [submissionId]
+      [submissionId],
     );
 
     if (subRes.rows.length === 0) {
@@ -290,35 +302,72 @@ exports.approveSubmission = async (req, res) => {
       return res.status(404).json({ error: "Submission not found" });
     }
 
-    if (subRes.rows[0].status !== "pending") {
+    const sub = subRes.rows[0];
+
+    if (sub.status !== "pending") {
       await client.query("ROLLBACK");
       return res.status(400).json({ error: "Submission already reviewed" });
     }
 
-    // Resolve resource_type id from name (e.g. "NOTES" → id)
+    if (sub.category !== "resource") {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({
+          error: "Only resource submissions can be approved into the library",
+        });
+    }
+
+    // Validate that required resource fields were collected at submission time
+    if (!sub.subject_id || !sub.resource_type) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({
+          error:
+            "Submission is missing subject or resource type — cannot approve",
+        });
+    }
+
+    // Resolve resource_type name → id
     const typeRes = await client.query(
       "SELECT id FROM resource_types WHERE name = $1",
-      [resourceType.toUpperCase()]
+      [sub.resource_type.toUpperCase()],
     );
 
     if (typeRes.rows.length === 0) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Invalid resource type" });
+      return res
+        .status(400)
+        .json({ error: "Invalid resource type on submission" });
     }
 
     const resourceTypeId = typeRes.rows[0].id;
 
-    // Insert the new resource
+    // Use resource_url if provided, otherwise fall back to attachment_path
+    const finalUrl = sub.resource_url?.trim() || sub.attachment_path;
+
+    if (!finalUrl) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ error: "Submission has no URL or attachment to use" });
+    }
+
+    // Use submitter's message as the title if no better title exists
+    const title = sub.message?.trim() || "Untitled Resource";
+
+    // Insert into resources
     await client.query(
       `INSERT INTO resources (title, url, subject_id, resource_type, year)
        VALUES ($1, $2, $3, $4, $5)`,
       [
-        title.trim(),
-        url.trim(),
-        parseInt(subjectId, 10),
+        title,
+        finalUrl,
+        sub.subject_id,
         resourceTypeId,
-        year ? parseInt(year, 10) : null,
-      ]
+        sub.resource_year || null,
+      ],
     );
 
     // Mark submission as reviewed
@@ -326,11 +375,13 @@ exports.approveSubmission = async (req, res) => {
       `UPDATE contact_submissions
        SET status = 'reviewed', reviewed_at = NOW(), admin_notes = $1
        WHERE id = $2`,
-      [admin_notes?.trim() || null, submissionId]
+      [admin_notes?.trim() || null, submissionId],
     );
 
     await client.query("COMMIT");
-    res.json({ message: "Resource added to library and submission marked as reviewed" });
+    res.json({
+      message: "Resource added to library and submission marked as reviewed",
+    });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("admin.approveSubmission:", err);
@@ -338,30 +389,30 @@ exports.approveSubmission = async (req, res) => {
   } finally {
     client.release();
   }
-};
 
-exports.dismissSubmission = async (req, res) => {
-  const submissionId = req.params.id;
-  const { admin_notes } = req.body;
+  exports.dismissSubmission = async (req, res) => {
+    const submissionId = req.params.id;
+    const { admin_notes } = req.body;
 
-  try {
-    const result = await pool.query(
-      `UPDATE contact_submissions
+    try {
+      const result = await pool.query(
+        `UPDATE contact_submissions
        SET status = 'dismissed', reviewed_at = NOW(), admin_notes = $1
        WHERE id = $2 AND status = 'pending'
        RETURNING id`,
-      [admin_notes?.trim() || null, submissionId]
-    );
+        [admin_notes?.trim() || null, submissionId],
+      );
 
-    if (result.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "Submission not found or already reviewed" });
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Submission not found or already reviewed" });
+      }
+
+      res.json({ message: "Submission dismissed" });
+    } catch (err) {
+      console.error("admin.dismissSubmission:", err);
+      res.status(500).json({ error: "Failed to dismiss submission" });
     }
-
-    res.json({ message: "Submission dismissed" });
-  } catch (err) {
-    console.error("admin.dismissSubmission:", err);
-    res.status(500).json({ error: "Failed to dismiss submission" });
-  }
+  };
 };

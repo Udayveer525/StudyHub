@@ -13,9 +13,11 @@ import {
   Clock,
   User,
   Mail,
+  Tag,
+  Hash,
+  Calendar,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
-import AddToLibraryModal from "./AddToLibraryModal";
 
 const STATUS_TABS = [
   { key: "pending", label: "Pending" },
@@ -24,45 +26,34 @@ const STATUS_TABS = [
   { key: "all", label: "All" },
 ];
 
-const CATEGORY_LABELS = {
-  "resource-contribution": "Resource",
-  "bug-report": "Bug Report",
-  general: "General",
-  other: "Other",
-};
-
 const CATEGORY_COLORS = {
-  "resource-contribution":
-    "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-  "bug-report": "text-red-400 bg-red-500/10 border-red-500/20",
-  general: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  other: "text-gray-400 bg-gray-500/10 border-gray-500/20",
+  resource: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  bug: "text-red-400 bg-red-500/10 border-red-500/20",
+  query: "text-blue-400 bg-blue-500/10 border-blue-500/20",
 };
 
 function CategoryBadge({ category }) {
-  const label = CATEGORY_LABELS[category] ?? category;
-  const color = CATEGORY_COLORS[category] ?? CATEGORY_COLORS["other"];
+  const labels = { resource: "Resource", bug: "Bug Report", query: "General" };
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${color}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold capitalize ${CATEGORY_COLORS[category] ?? CATEGORY_COLORS.query}`}
     >
-      {label}
+      {labels[category] ?? category}
     </span>
   );
 }
 
-// Slide-in detail drawer for a single submission
+// ─── Detail Drawer ────────────────────────────────────────────────────────────
 function SubmissionDrawer({
   submission,
   onClose,
-  onDismiss,
   onApprove,
-  dismissLoading,
+  onDismiss,
+  actionLoading,
 }) {
-  const isResourceContribution =
-    submission?.category === "resource-contribution";
-
   if (!submission) return null;
+  const isResource = submission.category === "resource";
+  const isPending = submission.status === "pending";
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -70,8 +61,9 @@ function SubmissionDrawer({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 flex h-full w-full max-w-lg flex-col border-l border-white/10 bg-gray-900 shadow-2xl overflow-y-auto">
-        {/* Drawer Header */}
+
+      <div className="relative z-10 flex h-full w-full max-w-lg flex-col border-l border-white/10 bg-gray-900 shadow-2xl">
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4 sticky top-0 bg-gray-900 z-10">
           <div>
             <h3 className="text-sm font-bold text-white">
@@ -89,21 +81,15 @@ function SubmissionDrawer({
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 p-5">
-          {/* Submitter Info */}
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto space-y-5 p-5">
+          {/* Submitter */}
           <div className="rounded-xl border border-white/8 bg-white/3 p-4 space-y-2">
             <p className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-3">
               Submitter
             </p>
             <div className="flex items-center gap-2 text-sm text-gray-300">
-              <User className="h-3.5 w-3.5 text-gray-600" />
-              {submission.name}
-              {submission.user_name &&
-                submission.user_name !== submission.name && (
-                  <span className="text-xs text-gray-600">
-                    (account: {submission.user_name})
-                  </span>
-                )}
+              <User className="h-3.5 w-3.5 text-gray-600" /> {submission.name}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Mail className="h-3.5 w-3.5 text-gray-600" />
@@ -124,17 +110,66 @@ function SubmissionDrawer({
             <CategoryBadge category={submission.category} />
           </div>
 
-          {/* Message */}
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-2">
-              Message
-            </p>
-            <div className="rounded-xl border border-white/8 bg-white/3 p-4">
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-                {submission.message}
+          {/* Resource metadata — shown only for resource submissions */}
+          {isResource && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 mb-1">
+                Resource Details
               </p>
+
+              {submission.resource_type && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Tag className="h-3.5 w-3.5 text-gray-600" />
+                  <span className="text-gray-400">Type:</span>
+                  <span className="font-semibold text-gray-200">
+                    {submission.resource_type}
+                  </span>
+                </div>
+              )}
+              {submission.subject_name && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Hash className="h-3.5 w-3.5 text-gray-600" />
+                  <span className="text-gray-400">Subject:</span>
+                  <span className="font-semibold text-gray-200">
+                    {submission.subject_name}
+                  </span>
+                </div>
+              )}
+              {submission.resource_year && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-3.5 w-3.5 text-gray-600" />
+                  <span className="text-gray-400">Year:</span>
+                  <span className="font-semibold text-gray-200">
+                    {submission.resource_year}
+                  </span>
+                </div>
+              )}
+              {submission.resource_url && (
+                <a
+                  href={submission.resource_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-brand-accent hover:underline mt-1"
+                >
+                  <ExternalLink className="h-3 w-3" /> View Resource URL
+                </a>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Message */}
+          {submission.message && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-2">
+                Message
+              </p>
+              <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {submission.message}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Attachment */}
           {submission.attachment_path && (
@@ -148,14 +183,13 @@ function SubmissionDrawer({
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-brand-accent/20 bg-brand-accent/5 px-3 py-2 text-sm text-brand-accent hover:bg-brand-accent/10 transition-colors"
               >
-                <Paperclip className="h-4 w-4" />
-                View Attachment
+                <Paperclip className="h-4 w-4" /> View Attachment{" "}
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           )}
 
-          {/* Admin Notes (if already reviewed) */}
+          {/* Admin notes if already reviewed */}
           {submission.admin_notes && (
             <div>
               <p className="text-[10px] font-mono uppercase tracking-widest text-gray-600 mb-2">
@@ -169,14 +203,11 @@ function SubmissionDrawer({
             </div>
           )}
 
-          {/* Status info for already reviewed */}
-          {submission.status !== "pending" && (
+          {/* Already reviewed status */}
+          {!isPending && (
             <div className="rounded-xl border border-white/8 bg-white/3 p-4 text-center">
-              <p className="text-sm text-gray-500">
-                This submission has been{" "}
-                <span className="font-semibold text-gray-300">
-                  {submission.status}
-                </span>
+              <p className="text-sm text-gray-500 capitalize">
+                {submission.status}
                 {submission.reviewed_at && (
                   <>
                     {" "}
@@ -188,23 +219,28 @@ function SubmissionDrawer({
           )}
         </div>
 
-        {/* Actions Footer */}
-        {submission.status === "pending" && (
+        {/* Actions */}
+        {isPending && (
           <div className="sticky bottom-0 border-t border-white/8 bg-gray-900 p-4 flex gap-3">
             <button
               onClick={() => onDismiss(submission.id)}
-              disabled={dismissLoading}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-gray-200 disabled:opacity-50"
+              disabled={!!actionLoading}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-gray-400 hover:bg-white/10 hover:text-gray-200 disabled:opacity-50 transition-colors"
             >
-              <X className="h-4 w-4" />
-              Dismiss
+              <X className="h-4 w-4" /> Dismiss
             </button>
-            {isResourceContribution && (
+
+            {isResource && (
               <button
-                onClick={() => onApprove(submission)}
-                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white transition-colors hover:bg-emerald-500"
+                onClick={() => onApprove(submission.id)}
+                disabled={!!actionLoading}
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
               >
-                <BookOpen className="h-4 w-4" />
+                {actionLoading === submission.id ? (
+                  <Clock className="h-4 w-4 animate-spin" />
+                ) : (
+                  <BookOpen className="h-4 w-4" />
+                )}
                 Add to Library
               </button>
             )}
@@ -215,6 +251,7 @@ function SubmissionDrawer({
   );
 }
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminSubmissions() {
   const [submissions, setSubmissions] = useState([]);
   const [total, setTotal] = useState(0);
@@ -223,9 +260,8 @@ export default function AdminSubmissions() {
   const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [approveTarget, setApproveTarget] = useState(null); // opens AddToLibraryModal
-  const [dismissLoading, setDismissLoading] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
@@ -251,13 +287,40 @@ export default function AdminSubmissions() {
   useEffect(() => {
     fetchSubmissions();
   }, [fetchSubmissions]);
-
   useEffect(() => {
     setPage(1);
   }, [status]);
 
+  const handleApprove = async (id) => {
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${API_BASE_URL}/api/admin/submissions/${id}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
+        },
+      );
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error);
+      }
+      setSelected(null);
+      await fetchSubmissions();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDismiss = async (id) => {
-    setDismissLoading(true);
+    setActionLoading(id);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
@@ -268,33 +331,28 @@ export default function AdminSubmissions() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ admin_notes: "" }),
+          body: JSON.stringify({}),
         },
       );
       if (!res.ok) throw new Error("Failed to dismiss");
-      setSelectedSubmission(null);
+      setSelected(null);
       await fetchSubmissions();
     } catch (err) {
       setError(err.message);
     } finally {
-      setDismissLoading(false);
+      setActionLoading(null);
     }
   };
 
-  const handleApproveSuccess = async () => {
-    setApproveTarget(null);
-    setSelectedSubmission(null);
-    await fetchSubmissions();
-  };
-
-  const statusBadge = (s) => {
-    const map = {
+  const statusBadge = (s) =>
+    ({
       pending: "text-amber-400 bg-amber-500/10 border-amber-500/20",
       reviewed: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
       dismissed: "text-gray-400 bg-gray-500/10 border-gray-500/20",
-    };
-    return map[s] || map.pending;
-  };
+    })[s] || "";
+
+  // Also fetch subject name for the drawer — join it in listSubmissions query
+  // (the backend already returns subject_name if we update the query, see note below)
 
   return (
     <div className="p-6 lg:p-8">
@@ -306,16 +364,16 @@ export default function AdminSubmissions() {
         </div>
         <button
           onClick={fetchSubmissions}
-          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-white/20 hover:text-gray-200"
+          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-400 hover:border-white/20 hover:text-gray-200 transition-colors"
         >
           <RefreshCw
             className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-          />
+          />{" "}
           Refresh
         </button>
       </div>
 
-      {/* Status Tabs */}
+      {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-xl border border-white/8 bg-gray-900 p-1">
         {STATUS_TABS.map((tab) => (
           <button
@@ -340,26 +398,30 @@ export default function AdminSubmissions() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-white/8 bg-gray-900">
-        {/* Table Header */}
+        {/* Header row */}
         <div className="grid grid-cols-12 gap-3 border-b border-white/8 bg-white/3 px-4 py-3">
-          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            ID
-          </div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            From
-          </div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            Category
-          </div>
-          <div className="col-span-4 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            Message
-          </div>
-          <div className="col-span-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            Status
-          </div>
-          <div className="col-span-2 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-            Actions
-          </div>
+          {["ID", "From", "Category", "Message", "Status", "Actions"].map(
+            (h, i) => (
+              <div
+                key={h}
+                className={`text-[10px] font-mono uppercase tracking-widest text-gray-600 ${
+                  i === 0
+                    ? "col-span-1"
+                    : i === 1
+                      ? "col-span-2"
+                      : i === 2
+                        ? "col-span-2"
+                        : i === 3
+                          ? "col-span-4"
+                          : i === 4
+                            ? "col-span-1"
+                            : "col-span-2"
+                }`}
+              >
+                {h}
+              </div>
+            ),
+          )}
         </div>
 
         {loading ? (
@@ -374,10 +436,9 @@ export default function AdminSubmissions() {
         ) : submissions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Inbox className="h-8 w-8 text-gray-700 mb-3" />
-            <p className="text-sm font-medium text-gray-500">Inbox is empty</p>
-            <p className="text-xs text-gray-700 mt-1">
+            <p className="text-sm font-medium text-gray-500">
               {status === "pending"
-                ? "No pending submissions."
+                ? "Inbox is empty."
                 : `No ${status} submissions.`}
             </p>
           </div>
@@ -387,7 +448,7 @@ export default function AdminSubmissions() {
               <div
                 key={sub.id}
                 className="grid grid-cols-12 items-start gap-3 px-4 py-4 transition-colors hover:bg-white/2 cursor-pointer"
-                onClick={() => setSelectedSubmission(sub)}
+                onClick={() => setSelected(sub)}
               >
                 <div className="col-span-1">
                   <span className="font-mono text-xs text-gray-600">
@@ -433,19 +494,22 @@ export default function AdminSubmissions() {
                     <div className="flex flex-col gap-1.5">
                       {sub.category === "resource" && (
                         <button
-                          onClick={() => setApproveTarget(sub)}
-                          className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                          disabled={actionLoading === sub.id}
+                          onClick={() => handleApprove(sub.id)}
+                          className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 transition-colors"
                         >
                           <BookOpen className="h-3 w-3" />
-                          Add to Library
+                          {actionLoading === sub.id
+                            ? "Adding..."
+                            : "Add to Library"}
                         </button>
                       )}
                       <button
+                        disabled={actionLoading === sub.id}
                         onClick={() => handleDismiss(sub.id)}
-                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-gray-400 transition-colors hover:bg-white/10"
+                        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-gray-400 hover:bg-white/10 disabled:opacity-50 transition-colors"
                       >
-                        <X className="h-3 w-3" />
-                        Dismiss
+                        <X className="h-3 w-3" /> Dismiss
                       </button>
                     </div>
                   ) : (
@@ -474,14 +538,14 @@ export default function AdminSubmissions() {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className="flex items-center gap-1 rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-400 transition-colors hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-400 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="h-3.5 w-3.5" /> Prev
           </button>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="flex items-center gap-1 rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-400 transition-colors hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 rounded-lg border border-white/10 bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-400 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next <ChevronRight className="h-3.5 w-3.5" />
           </button>
@@ -489,22 +553,13 @@ export default function AdminSubmissions() {
       </div>
 
       {/* Detail Drawer */}
-      {selectedSubmission && (
+      {selected && (
         <SubmissionDrawer
-          submission={selectedSubmission}
-          onClose={() => setSelectedSubmission(null)}
+          submission={selected}
+          onClose={() => setSelected(null)}
+          onApprove={handleApprove}
           onDismiss={handleDismiss}
-          onApprove={(sub) => setApproveTarget(sub)}
-          dismissLoading={dismissLoading}
-        />
-      )}
-
-      {/* Add to Library Modal */}
-      {approveTarget && (
-        <AddToLibraryModal
-          submission={approveTarget}
-          onClose={() => setApproveTarget(null)}
-          onSuccess={handleApproveSuccess}
+          actionLoading={actionLoading}
         />
       )}
     </div>

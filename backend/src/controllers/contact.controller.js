@@ -1,39 +1,66 @@
 // controllers/contact.controller.js
 const pool = require("../config/db");
 
+const VALID_CATEGORIES = ["resource", "bug", "query"];
+
 exports.submitContactForm = async (req, res) => {
   try {
     const { name, email, category, message } = req.body;
-    
-    // OptionalAuth middleware will provide this if logged in, otherwise null
-    const userId = req.user?.userId || null; 
-    
-    // Multer attaches the file info to req.file
+    const userId = req.user?.userId || null;
     const attachmentPath = req.file ? req.file.path : null;
 
-    if (!name || !email || !category || !message) {
+    if (!name || !email || !category) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const query = `
-      INSERT INTO contact_submissions 
-        (user_id, name, email, category, message, attachment_path, created_at)
-      VALUES 
-        ($1, $2, $3, $4, $5, $6, NOW())
-      RETURNING id;
-    `;
-    
-    const values = [userId, name, email, category, message, attachmentPath];
+    const safeCategory = VALID_CATEGORIES.includes(category)
+      ? category
+      : "query";
 
-    const result = await pool.query(query, values);
+    // Resource-specific fields (only present when category === "resource")
+    const subjectId = req.body.subject_id
+      ? parseInt(req.body.subject_id, 10)
+      : null;
+    const resourceType = req.body.resource_type || null;
+    const resourceUrl = req.body.resource_url || null;
+    const resourceYear = req.body.resource_year
+      ? parseInt(req.body.resource_year, 10)
+      : null;
 
-    // Send back a success response with the new ticket ID
-    res.status(201).json({ 
-      success: true, 
-      ticketId: result.rows[0].id, 
-      message: "Submission received successfully" 
+    // Message is optional for resource submissions
+    const safeMessage =
+      message?.trim() ||
+      (safeCategory === "resource" ? "Resource submission" : null);
+    if (safeCategory !== "resource" && !safeMessage) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO contact_submissions
+         (user_id, name, email, category, message, attachment_path,
+          subject_id, resource_type, resource_url, resource_year,
+          status, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending',NOW())
+       RETURNING id`,
+      [
+        userId,
+        name,
+        email,
+        safeCategory,
+        safeMessage,
+        attachmentPath,
+        subjectId,
+        resourceType,
+        resourceUrl,
+        resourceYear,
+      ],
+    );
+
+    res.status(201).json({
+      success: true,
+      ticketId: result.rows[0].id,
+      message: "Submission received successfully",
     });
-
   } catch (err) {
     console.error("Contact submission error:", err);
     res.status(500).json({ error: "Failed to submit form" });
