@@ -72,3 +72,37 @@ exports.getSavedResources = async (req, res) => {
   }
 };
 
+
+exports.getUserStats = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+        (SELECT COUNT(*)::int FROM questions  WHERE user_id = $1) AS questions_asked,
+        (SELECT COUNT(*)::int FROM answers    WHERE user_id = $1) AS answers_given,
+        (SELECT COUNT(*)::int FROM answers    WHERE user_id = $1 AND is_accepted = true) AS answers_accepted,
+        (SELECT COUNT(*)::int FROM saved_resources WHERE user_id = $1) AS resources_saved`,
+      [userId]
+    );
+
+    // Recent questions (last 5) — used by dashboard
+    const questionsRes = await pool.query(
+      `SELECT q.id, q.title, q.status, q.created_at,
+              (SELECT COUNT(*)::int FROM answers a WHERE a.question_id = q.id) AS answer_count
+       FROM questions q
+       WHERE q.user_id = $1
+       ORDER BY q.created_at DESC
+       LIMIT 5`,
+      [userId]
+    );
+
+    res.json({
+      ...result.rows[0],
+      recent_questions: questionsRes.rows,
+    });
+  } catch (err) {
+    console.error("getUserStats:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
+  }
+};

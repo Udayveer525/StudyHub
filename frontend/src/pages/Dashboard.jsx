@@ -64,15 +64,9 @@ const SectionHeader = ({ title, linkText, linkTo, icon: Icon }) => (
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [allQuestions, setAllQuestions] = useState(null);
-  const [userQuestions, setUserQuestions] = useState([]);
-
-  // Changed from savedResourcesCount to the actual array
+  const [stats, setStats] = useState(null);
   const [savedResources, setSavedResources] = useState(null);
-
-  const [answersGivenCount, setAnswersGivenCount] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [answersLoading, setAnswersLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -80,98 +74,42 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
 
-    const fetchAll = async () => {
-      try {
-        const qRes = await fetch(
-          `${API_BASE_URL}/api/questions?limit=200&offset=0`,
-        );
-        if (!qRes.ok) throw new Error("Failed to load questions");
-        const questions = await qRes.json();
-        setAllQuestions(questions || []);
-        setUserQuestions(
-          (questions || []).filter(
-            (q) => Number(q.user_id) === Number(user.id),
-          ),
-        );
-      } catch (err) {
-        console.error("dashboard: fetchAll error", err);
+    const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    // Two parallel requests — stats (replaces O(n) loop) + saved resources
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/users/stats`, { headers }),
+      fetch(`${API_BASE_URL}/api/resources/saved`, { headers }),
+    ])
+      .then(async ([statsRes, savedRes]) => {
+        if (!statsRes.ok) throw new Error("Failed to load stats");
+        const statsData = await statsRes.json();
+        setStats(statsData);
+
+        const savedData = savedRes.ok ? await savedRes.json() : [];
+        setSavedResources(Array.isArray(savedData) ? savedData : []);
+      })
+      .catch((err) => {
+        console.error("dashboard fetch error:", err);
         setError("Could not load activity.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchSaved = async () => {
-      try {
-        // Updated Endpoint & Added Authorization Header
-        const r = await fetch(
-          `${API_BASE_URL}/api/resources/saved/${user.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        );
-        if (!r.ok) {
-          setSavedResources([]);
-          return;
-        }
-        const data = await r.json();
-        setSavedResources(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setSavedResources([]);
-      }
-    };
-
-    fetchAll();
-    fetchSaved();
+      })
+      .finally(() => setLoading(false));
   }, [user]);
 
-  // Answer counting logic remains exactly the same...
-  useEffect(() => {
-    if (!user || !allQuestions) return;
-    setAnswersLoading(true);
-    setAnswersGivenCount(0);
-
-    const questionIds = (allQuestions || []).slice(0, 40).map((q) => q.id);
-
-    (async () => {
-      try {
-        let count = 0;
-        for (let id of questionIds) {
-          try {
-            const r = await fetch(`${API_BASE_URL}/api/questions/${id}`);
-            if (!r.ok) continue;
-            const q = await r.json();
-            if (!q.answers) continue;
-            count += q.answers.filter(
-              (a) => Number(a.user_id) === Number(user.id),
-            ).length;
-          } catch (e) {}
-        }
-        setAnswersGivenCount(count);
-      } catch (err) {
-        setAnswersGivenCount(null);
-      } finally {
-        setAnswersLoading(false);
-      }
-    })();
-  }, [user, allQuestions]);
-
-  const recentUserQuestions = useMemo(() => {
-    return (userQuestions || []).slice(0, 5).map((q) => ({
-      id: q.id,
-      title: q.title,
-      status: q.status,
-      created_at: q.created_at,
-      answer_count: q.answer_count ?? 0,
-    }));
-  }, [userQuestions]);
+  // Derive values from stats
+  const recentUserQuestions = useMemo(
+    () => stats?.recent_questions ?? [],
+    [stats],
+  );
 
   const firstName = user?.name?.split(" ")[0] ?? "Student";
   const savedCount = savedResources ? savedResources.length : "—";
   const currentTitle = user?.current_title || null;
   const currentLevel = user?.current_level ?? 0;
+  const questionsAsked = stats?.questions_asked ?? "—";
+  const answersGiven = stats?.answers_given ?? "—";
+  const answersAccepted = stats?.answers_accepted ?? "—";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background-gradientFrom to-background-gradientTo py-8 font-sans text-brand-deep">
@@ -208,14 +146,14 @@ export default function Dashboard() {
         <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Questions Asked"
-            value={userQuestions ? userQuestions.length : "—"}
+            value={loading ? "…" : questionsAsked}
             hint="Total contributions"
             icon={HelpCircle}
             colorClass="bg-brand-accent text-brand-accent"
           />
           <StatCard
             label="Answers Given"
-            value={answersLoading ? "…" : (answersGivenCount ?? "—")}
+            value={loading ? "…" : answersGiven}
             hint="Community help"
             icon={MessageCircle}
             colorClass="bg-emerald-500 text-emerald-500"
@@ -445,15 +383,15 @@ export default function Dashboard() {
                 Path to Promotion
               </h3>
               <p className="mb-4 text-sm text-gray-500">
-                {answersLoading
+                {loading
                   ? "Calculating..."
-                  : `You have contributed ${answersGivenCount || 0} answers.`}
+                  : `You have contributed ${stats?.answers_given || 0} answers (${stats?.answers_accepted || 0} accepted).`}
               </p>
 
               {(() => {
                 // Thresholds matching titleLevels.js: 0→1→5→10→20→35→50
                 const THRESHOLDS = [0, 1, 5, 10, 20, 35, 50];
-                const answers = answersGivenCount || 0;
+                const answers = stats?.answers_accepted || 0;
                 const nextThreshold = THRESHOLDS.find((t) => t > answers) ?? 50;
                 const prevThreshold =
                   [...THRESHOLDS].reverse().find((t) => t <= answers) ?? 0;

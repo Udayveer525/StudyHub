@@ -88,9 +88,11 @@ exports.listQuestions = async (req, res) => {
     idx++;
   }
 
+  // Count query uses same WHERE (without limit/offset params)
+  const countParams = [...params];
+
   const limitIdx = idx++;
   const offsetIdx = idx++;
-
   params.push(Number(limit), Number(offset));
 
   const sql = `
@@ -121,9 +123,25 @@ exports.listQuestions = async (req, res) => {
     LIMIT $${limitIdx} OFFSET $${offsetIdx}
   `;
 
+  const countSql = `
+    SELECT COUNT(*)::int AS total
+    FROM questions q
+    JOIN users u ON q.user_id = u.id
+    JOIN subjects s ON q.subject_id = s.id
+    JOIN semesters sem ON s.semester_id = sem.id
+    JOIN degrees d ON sem.degree_id = d.id
+    ${where}
+  `;
+
   try {
-    const result = await pool.query(sql, params);
-    return res.json(result.rows);
+    const [result, countResult] = await Promise.all([
+      pool.query(sql, params),
+      pool.query(countSql, countParams),
+    ]);
+    return res.json({
+      items: result.rows,
+      total: countResult.rows[0].total,
+    });
   } catch (err) {
     console.error("listQuestions:", err);
     return res.status(500).json({ error: "Failed to list questions" });
@@ -209,7 +227,7 @@ exports.addAnswer = async (req, res) => {
     // Fetch answerer name for the notification email
     const answererRes = await client.query(
       "SELECT name FROM users WHERE id = $1",
-      [userId]
+      [userId],
     );
     const answererName = answererRes.rows[0]?.name ?? "A fellow student";
 
@@ -236,7 +254,7 @@ exports.addAnswer = async (req, res) => {
         question.author_name,
         question.title,
         qid,
-        answererName
+        answererName,
       ).catch((err) => console.error("Failed to send new answer email:", err));
     }
 

@@ -85,9 +85,9 @@ export default function Questions() {
         );
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        setItems(data || []);
-        const total = res.headers.get("x-total-count");
-        setTotalCount(total ? Number(total) : null);
+        // Response is now { items: [...], total: N }
+        setItems(data.items || []);
+        setTotalCount(data.total ?? null);
       } catch (err) {
         setItems([]);
         setTotalCount(null);
