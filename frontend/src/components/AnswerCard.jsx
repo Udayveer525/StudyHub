@@ -2,6 +2,7 @@
 import React from "react";
 import { ThumbsUp, ThumbsDown, Check, User, Clock, Shield } from "lucide-react";
 import ReportButton from "./ReportButton";
+import { Link } from "react-router-dom";
 
 export default function AnswerCard({
   answer,
@@ -60,7 +61,13 @@ export default function AnswerCard({
           <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
             <div className="flex items-center gap-2 font-semibold text-brand-deep">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-deep text-[10px] text-white">
-                {answer.author_name ? answer.author_name.charAt(0) : "U"}
+                <Link
+                  to={`/profile/${answer.user_id}`}
+                  title="View your profile"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-deep text-[10px] text-white"
+                >
+                  {answer.author_name ? answer.author_name.charAt(0) : "U"}
+                </Link>
               </div>
               {answer.author_name}
               {answer.current_title && (

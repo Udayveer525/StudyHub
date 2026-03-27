@@ -86,9 +86,13 @@ export default function Navbar() {
               <div className="h-6 w-px bg-gray-200"></div>
 
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-deep text-xs font-bold text-white ring-2 ring-white">
+                <NavLink
+                  to={`/profile/${user.id}`}
+                  title="View your profile"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-deep text-xs font-bold text-white ring-2 ring-white transition-transform hover:scale-105"
+                >
                   {user.name ? user.name.charAt(0) : "U"}
-                </div>
+                </NavLink>
                 <button
                   onClick={() => {
                     logout();
@@ -162,12 +166,21 @@ export default function Navbar() {
                 </NavLink>
               </div>
             ) : (
-              <button
-                onClick={logout}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-bold text-red-600"
-              >
-                <LogOut className="h-4 w-4" /> Log Out
-              </button>
+              <div className="flex flex-row gap-3">
+                <NavLink
+                  to={`/profile/${user.id}`}
+                  title="View your profile"
+                  className="flex w-2/3 items-center justify-center gap-2 rounded-xl bg-green-50 py-3 text-sm font-bold text-green-600"
+                >
+                  <User className="h-4 w-4" /> Profile
+                </NavLink>
+                <button
+                  onClick={logout}
+                  className="flex w-1/3 items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-bold text-red-600"
+                >
+                  <LogOut className="h-4 w-4" /> Log Out
+                </button>
+              </div>
             )}
           </div>
         </div>
