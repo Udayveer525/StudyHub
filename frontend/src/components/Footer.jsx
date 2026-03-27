@@ -66,12 +66,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="mailto:help@studyhub.com"
-                  className="hover:text-brand-accent"
-                >
+                <Link to="/contact" className="hover:text-brand-accent">
                   Contact Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

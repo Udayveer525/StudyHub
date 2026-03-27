@@ -10,6 +10,7 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Pages
 import Login from "./pages/Login";
@@ -34,6 +35,7 @@ import AdminSubmissions from "./pages/admin/AdminSubmissions";
 function MainLayout() {
   return (
     <div className="min-h-screen bg-background-light font-sans text-slate-800 selection:bg-brand-accent/20 selection:text-brand-deep">
+      <ScrollToTop />
       <Navbar />
       <Routes>
         <Route

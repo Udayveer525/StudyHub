@@ -170,8 +170,8 @@ export default function Dashboard() {
 
   const firstName = user?.name?.split(" ")[0] ?? "Student";
   const savedCount = savedResources ? savedResources.length : "—";
-  const currentTitle = user?.current_title || "Novice";
-  const currentLevel = user?.current_level || 1;
+  const currentTitle = user?.current_title || null;
+  const currentLevel = user?.current_level ?? 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background-gradientFrom to-background-gradientTo py-8 font-sans text-brand-deep">
@@ -441,26 +441,57 @@ export default function Dashboard() {
 
             {/* Contribution Stats */}
             <div className="rounded-xl2 border border-gray-100 bg-white p-6 shadow-soft">
-              <h3 className="mb-2 text-base font-bold text-brand-deep">Path to Promotion</h3>
+              <h3 className="mb-2 text-base font-bold text-brand-deep">
+                Path to Promotion
+              </h3>
               <p className="mb-4 text-sm text-gray-500">
-                {answersLoading ? "Calculating..." : `You have contributed ${answersGivenCount || 0} answers.`}
+                {answersLoading
+                  ? "Calculating..."
+                  : `You have contributed ${answersGivenCount || 0} answers.`}
               </p>
-              
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full bg-accent-orange transition-all duration-1000"
-                  // Visual representation of progression to next level (mock logic based on level)
-                  style={{ width: `${Math.min((currentLevel * 20), 100)}%` }}
-                ></div>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-xs font-bold">
-                 <span className="text-brand-deep">{currentTitle}</span>
-                 <span className="text-gray-400">Next Level →</span>
-              </div>
+
+              {(() => {
+                // Thresholds matching titleLevels.js: 0→1→5→10→20→35→50
+                const THRESHOLDS = [0, 1, 5, 10, 20, 35, 50];
+                const answers = answersGivenCount || 0;
+                const nextThreshold = THRESHOLDS.find((t) => t > answers) ?? 50;
+                const prevThreshold =
+                  [...THRESHOLDS].reverse().find((t) => t <= answers) ?? 0;
+                const progress =
+                  nextThreshold === prevThreshold
+                    ? 100
+                    : Math.round(
+                        ((answers - prevThreshold) /
+                          (nextThreshold - prevThreshold)) *
+                          100,
+                      );
+                return (
+                  <>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div
+                        className="h-full bg-accent-orange transition-all duration-1000"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-bold">
+                      <span className="text-brand-deep">
+                        {currentTitle || "New Member"}
+                      </span>
+                      <span className="text-gray-400">
+                        {answers < 50
+                          ? `${answers} / ${nextThreshold} answers`
+                          : "Max Level"}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="rounded-xl2 border border-brand-mid/10 bg-background-light p-4 text-xs text-brand-mid">
-              <span className="font-bold">Pro Tip:</span> Your title upgrades automatically when your answers are marked as "Accepted" by other students!
+              <span className="font-bold">Pro Tip:</span> Your title upgrades
+              automatically when your answers are marked as "Accepted" by other
+              students!
             </div>
 
             <div className="rounded-xl2 border border-brand-mid/10 bg-background-light p-4 text-xs text-brand-mid">
