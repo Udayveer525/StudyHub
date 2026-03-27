@@ -23,6 +23,7 @@ import QuestionThread from "./pages/QuestionThread";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import ContactPage from "./pages/ContactPage";
+import Profile from "./pages/Profile";
 import VerifyEmail from "./pages/VerifyEmail";
 
 // Admin Pages
@@ -57,23 +58,14 @@ function MainLayout() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/questions" element={<Questions />} />
-        <Route
-          path="/questions/ask"
-          element={
-            <ProtectedRoute>
-              <AskQuestion />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/questions/ask" element={
+          <ProtectedRoute><AskQuestion /></ProtectedRoute>
+        } />
         <Route path="/questions/:id" element={<QuestionThread />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
       </Routes>
     </div>
   );
@@ -85,11 +77,7 @@ export default function App() {
       {/* Admin panel — fully isolated, no Navbar/Footer */}
       <Route
         path="/admin"
-        element={
-          <AdminRoute>
-            <AdminLayout />
-          </AdminRoute>
-        }
+        element={<AdminRoute><AdminLayout /></AdminRoute>}
       >
         <Route index element={<AdminOverview />} />
         <Route path="reports" element={<AdminReports />} />
