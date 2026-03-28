@@ -59,7 +59,7 @@ export default function Login() {
         throw new Error(data.error || "Login failed");
       }
 
-      login(data.token);
+      await login(data.token);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Invalid credentials. Please try again.");

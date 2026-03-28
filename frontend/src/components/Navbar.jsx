@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut, LayoutDashboard, Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
-const MASCOT_IMAGE = "/owl-icon.png"; // Ensure this path is correct
+const MASCOT_IMAGE = "/owl-icon.png";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,6 +83,8 @@ export default function Navbar() {
                   Admin
                 </NavLink>
               )}
+
+              <NotificationBell />
 
               <div className="h-6 w-px bg-gray-200"></div>
 
@@ -170,6 +173,7 @@ export default function Navbar() {
                 <NavLink
                   to={`/profile/${user.id}`}
                   title="View your profile"
+                  onClick={() => setIsOpen(false)}
                   className="flex w-2/3 items-center justify-center gap-2 rounded-xl bg-green-50 py-3 text-sm font-bold text-green-600"
                 >
                   <User className="h-4 w-4" /> Profile

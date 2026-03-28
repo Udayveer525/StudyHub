@@ -27,6 +27,7 @@ const contactRoutes = require("./routes/contact.routes");
 const adminRoutes = require("./routes/admin.routes");
 const reportRoutes = require("./routes/report.routes");
 const profileRoutes = require("./routes/profile.routes");
+const notificationRoutes  = require("./routes/notification.routes");
 
 app.use("/api/institutions", institutionRoutes);
 app.use("/api/degrees", degreeRoutes);
@@ -47,6 +48,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/profile", profileRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("StudyHub API is running");

@@ -32,9 +32,9 @@ export function AuthProvider({ children }) {
     else setLoading(false);
   }, []);
 
-  const login = (token) => {
+  const login = async (token) => {
     localStorage.setItem("token", token);
-    fetchMe(token);
+    await fetchMe(token);
   };
 
   const logout = () => {

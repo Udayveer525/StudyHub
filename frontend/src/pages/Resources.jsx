@@ -178,19 +178,23 @@ export default function Resources() {
                 ))}
               </div>
             ) : resources.length === 0 ? (
-              <div className="rounded-xl2 border border-orange-100 bg-orange-50/50 p-8 text-center">
-                <AlertCircle className="mx-auto h-10 w-10 text-orange-300 mb-3" />
+              <div className="rounded-xl2 border border-brand-accent/20 bg-brand-accent/5 p-8 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-accent/10">
+                  <AlertCircle className="h-7 w-7 text-brand-accent" />
+                </div>
                 <h3 className="text-lg font-bold text-brand-deep">
-                  No {selectedType} found
+                  Be the first to contribute!
                 </h3>
-                <p className="text-sm text-gray-600">
-                  We don't have materials for this section yet.
+                <p className="mt-2 text-sm text-gray-500 max-w-xs mx-auto">
+                  No {selectedType.toLowerCase()} found for this subject yet.
+                  Share your notes and help your peers.
                 </p>
                 <Link
                   to="/contact"
-                  className="mt-4 inline-block text-sm font-bold text-brand-accent hover:underline"
+                  state={{ category: "resource", subject: selection.subjectId }}
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-deep px-6 py-2.5 text-sm font-bold text-white shadow-soft hover:bg-brand-mid transition-colors"
                 >
-                  Upload notes & earn karma points →
+                  Share a Resource →
                 </Link>
               </div>
             ) : (

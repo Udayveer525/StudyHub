@@ -6,13 +6,54 @@ import {
   MessageCircle,
   CheckCircle,
   Clock,
-  MoreHorizontal,
   Share2,
+  Copy, 
+  Check,
 } from "lucide-react";
 import { API_BASE_URL } from "../config/api";
 import { useAuth } from "../context/AuthContext";
 import AnswerCard from "../components/AnswerCard";
 import AnswerForm from "../components/AnswerForm";
+
+function ShareButton() {
+  const [copied, setCopied] = useState(false);
+ 
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      // Use native share sheet on mobile if available
+      if (navigator.share) {
+        await navigator.share({ title: document.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // Fallback: select text in a hidden input
+      const el = document.createElement("input");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+ 
+  return (
+    <button
+      onClick={handleShare}
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-gray-400 transition-all hover:bg-gray-50 hover:text-brand-deep"
+    >
+      {copied
+        ? <><Check className="h-4 w-4 text-emerald-500" /><span className="text-xs font-semibold text-emerald-500">Copied!</span></>
+        : <><Share2 className="h-4 w-4" /><span className="text-xs font-semibold">Share</span></>
+      }
+    </button>
+  );
+}
 
 export default function QuestionThread() {
   const { id } = useParams();
@@ -22,7 +63,6 @@ export default function QuestionThread() {
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Logic remains identical
   useEffect(() => {
     (async () => {
       try {
@@ -106,6 +146,7 @@ export default function QuestionThread() {
 
   const isAuthor = user?.id === question.user_id;
   const canAnswer = user && question.status !== "resolved" && !isAuthor;
+  const alreadyAnswered = user && answers.some(a => Number(a.user_id) === Number(user.id));
 
   return (
     <div className="min-h-screen bg-background-light py-8 font-sans text-brand-deep">
@@ -144,8 +185,7 @@ export default function QuestionThread() {
                   <span className="h-1 w-1 rounded-full bg-gray-300"></span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {new Date(question.created_at).toLocaleDateString()}{" "}
-                    {/* You might want to use question.created_at */}
+                    {new Date(question.created_at).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -195,10 +235,7 @@ export default function QuestionThread() {
                 </div>
               </div>
 
-              <button className="flex items-center gap-2 rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-brand-deep">
-                <Share2 className="h-4 w-4" />
-                <span className="text-xs font-semibold">Share</span>
-              </button>
+              <ShareButton />
             </div>
           </div>
         </div>
@@ -212,6 +249,12 @@ export default function QuestionThread() {
                 {answers.length}
               </span>
             </h2>
+            {/* "You answered this" indicator */}
+            {alreadyAnswered && (
+              <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">
+                <CheckCircle className="h-3.5 w-3.5" /> You answered this
+              </span>
+            )}
           </div>
 
           <div className="space-y-6">
