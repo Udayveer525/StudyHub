@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Flag,
   Inbox,
+  FileText,
   LogOut,
   Menu,
   X,
@@ -32,6 +33,12 @@ const NAV_ITEMS = [
     icon: Inbox,
     label: "Submissions",
     description: "Contact inbox",
+  },
+  {
+    to: "/admin/syllabus",
+    icon: FileText,
+    label: "Syllabi",
+    description: "Ollie AI content",
   },
 ];
 

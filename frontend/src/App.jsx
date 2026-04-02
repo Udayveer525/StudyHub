@@ -31,6 +31,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSubmissions from "./pages/admin/AdminSubmissions";
+import AdminSyllabus from "./pages/admin/AdminSyllabus";
+import OlliePage from "./pages/ollie/OlliePage";
 
 // Main app shell — renders Navbar above all student-facing pages
 function MainLayout() {
@@ -58,14 +60,32 @@ function MainLayout() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/questions" element={<Questions />} />
-        <Route path="/questions/ask" element={
-          <ProtectedRoute><AskQuestion /></ProtectedRoute>
-        } />
+        <Route
+          path="/questions/ask"
+          element={
+            <ProtectedRoute>
+              <AskQuestion />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/questions/:id" element={<QuestionThread />} />
         <Route path="/profile/:id" element={<Profile />} />
-        <Route path="/dashboard" element={
-          <ProtectedRoute><Dashboard /></ProtectedRoute>
-        } />
+        <Route
+          path="/study"
+          element={
+            <ProtectedRoute>
+              <OlliePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );
@@ -77,11 +97,16 @@ export default function App() {
       {/* Admin panel — fully isolated, no Navbar/Footer */}
       <Route
         path="/admin"
-        element={<AdminRoute><AdminLayout /></AdminRoute>}
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
       >
         <Route index element={<AdminOverview />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="submissions" element={<AdminSubmissions />} />
+        <Route path="syllabus" element={<AdminSyllabus />} />
       </Route>
 
       {/* All student-facing routes under MainLayout */}

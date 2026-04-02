@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "../config/api";
 import { useAuth } from "../context/AuthContext";
+import OllieAvatar from "../components/ollie/OllieAvatar";
 
 /**
  * UI COMPONENT: StatCard
@@ -371,9 +372,12 @@ export default function Dashboard() {
                   </li>
                 </ul>
 
-                <button className="mt-6 w-full rounded-xl bg-white py-2.5 text-sm font-bold text-brand-deep transition-transform hover:scale-[1.02]">
-                  View AI Study Plan
-                </button>
+                <Link
+                  to="/study"
+                  className="mt-6 flex items-center justify-center gap-1 w-full rounded-xl bg-white py-2.5 text-sm font-bold text-brand-deep transition-transform hover:scale-[1.02] text-center"
+                >
+                  Study with Ollie <OllieAvatar size={34} />
+                </Link>
               </div>
             </div>
 
