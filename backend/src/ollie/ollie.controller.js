@@ -1,10 +1,18 @@
 // ollie/ollie.controller.js
 const pool = require("../config/db");
-const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
 const { chat } = require("./groq.client");
 const { buildSystemPrompt, buildParsePrompt } = require("./prompt.builder");
+
+// pdfjs-dist v4+ ships only .mjs files — no CommonJS .js build exists.
+// We load it once via dynamic import() which works fine from a CommonJS module.
+// The promise is cached so subsequent calls reuse the same module.
+let _pdfjsPromise = null;
+function getPdfjs() {
+  if (!_pdfjsPromise)
+    _pdfjsPromise = import("pdfjs-dist/legacy/build/pdf.mjs");
+  return _pdfjsPromise;
+}
 
 // ─── Language subjects to skip (no unit-based syllabus) ─────────────────────
 const SKIP_SUBJECTS = [
@@ -23,68 +31,113 @@ function isLanguageSubject(name) {
   return SKIP_SUBJECTS.some((s) => lower.includes(s));
 }
 
-// ─── PDF extraction via pdfplumber (Python) ───────────────────────────────────
-// We use pdfplumber instead of pdf-parse because pdf-parse silently truncates
-// large PDFs to ~10 KB of text — enough for semester 1 only.  pdfplumber
-// works page-by-page so we get the full 55-page document every time.
-//
-// EXTRACTION STRATEGY — no subject code required:
-//
-//   Every subject content page in the BCA syllabus has this structure:
-//     Line 1:  Subject name          (e.g. "Java Programming")
-//     Line 2:  BCA paper code        (e.g. "BCA-16-503")
-//     Line 3:  "L T P Cr External Marks: 65"   ← the unique marker
-//     ...      Objective, Note, UNIT I … UNIT IV
-//     End:     "Suggested Readings" / "References:"
-//
-//   Scheme tables also contain "Subject name → BCA code" pairs, but they are
-//   immediately followed by a numeric row ("6 - - 6 10 65 75 3 Hrs 3"), never
-//   by "External Marks".  This makes "External Marks" the 100% reliable signal
-//   that we are on a real content page, not a table entry.
-//
-//   The Python script below uses pdfplumber to read the PDF page-by-page,
-//   identifies content pages by the "External Marks" signal, stitches together
-//   multi-page subjects (common — many subjects span 2 pages), and returns the
-//   text for the one subject whose name matches the request.
-
-const EXTRACT_SCRIPT = path.join(__dirname, "extract_pdf.py");
-
-// On Windows, the Python executable is "python", not "python3".
-// On Linux/macOS (and Render), it is "python3".
-// We detect once at startup so every call uses the right command.
-const PYTHON_CMD = process.platform === "win32" ? "python" : "python3";
+// ─── PDF extraction via pdfjs-dist (pure Node, no Python) ───────────────────
+// Uses the same page-level structure detection as the Python version:
+//   - "External Marks" only appears on real subject content pages, never in
+//     scheme tables → reliable page-start signal
+//   - Subject name is always the first line on its content page → exact match
+//   - Multi-page subjects are collected until the next content page starts
 
 /**
- * Extract the full syllabus text for one subject from a PDF file.
- * Returns the raw text string, or null if the subject was not found.
+ * Extract text from one PDF page, reconstructing lines by Y-position grouping.
+ * pdfjs gives us individual text items with coordinates — we group items at
+ * the same Y into a single line, then sort top-to-bottom.
+ */
+async function extractPageText(pdfDoc, pageNum) {
+  const page = await pdfDoc.getPage(pageNum);
+  const content = await page.getTextContent();
+  const byY = new Map();
+  for (const item of content.items) {
+    if (!item.str?.trim()) continue;
+    const y = Math.round(item.transform[5]); // PDF Y axis is bottom-up
+    if (!byY.has(y)) byY.set(y, []);
+    byY.get(y).push(item.str);
+  }
+  return [...byY.entries()]
+    .sort((a, b) => b[0] - a[0]) // descending Y = top to bottom
+    .map(([, items]) => items.join(" ").trim())
+    .filter((l) => l)
+    .join("\n");
+}
+
+/** True if this page's text contains the content-page header marker. */
+function isSubjectStart(pageText) {
+  return (
+    pageText.includes("External Marks") ||
+    /\bL\b.*\bT\b.*\bP\b.*\bCr\b/.test(pageText)
+  );
+}
+
+/**
+ * True if the first meaningful line of pageText matches subjectName.
+ * Only checks the first non-trivial line — that is always where the
+ * subject name appears on content pages in this syllabus format.
+ */
+function nameMatches(pageText, subjectName) {
+  const target = subjectName.trim().toLowerCase();
+  const targetWords = target.split(/\W+/).filter((w) => w.length > 2);
+  for (const line of pageText.split("\n").slice(0, 4)) {
+    const l = line.trim().toLowerCase();
+    if (!l || l === ":") continue; // skip OCR artifacts
+    if (l === target) return true;
+    // One-word tolerance: all target words present, line not much longer
+    const hits = targetWords.filter((w) => l.includes(w)).length;
+    if (hits === targetWords.length && line.trim().length <= subjectName.length + 15)
+      return true;
+    break; // only the first meaningful line counts
+  }
+  return false;
+}
+
+/**
+ * Extract the full text section for a subject from a PDF file.
+ * Returns the text string, or null if the subject page was not found.
  *
  * @param {string} pdfPath      - Absolute path to the uploaded PDF
  * @param {string} subjectName  - e.g. "Java Programming"
  */
-function extractSubjectSection(pdfPath, subjectName) {
-  try {
-    const result = execFileSync(
-      PYTHON_CMD,
-      [EXTRACT_SCRIPT, pdfPath, subjectName],
-      { encoding: "utf-8", timeout: 30_000 },
-    );
-    const parsed = JSON.parse(result.trim());
-    if (!parsed.success) {
-      console.warn(`[Ollie] extract_pdf.py: subject not found — "${subjectName}"`);
-      return null;
+async function extractSubjectSection(pdfPath, subjectName) {
+  const { getDocument } = await getPdfjs();
+  const data = new Uint8Array(require("fs").readFileSync(pdfPath));
+  const pdfDoc = await getDocument({ data }).promise;
+
+  // Extract all pages (parallel for speed)
+  const pageTexts = await Promise.all(
+    Array.from({ length: pdfDoc.numPages }, (_, i) =>
+      extractPageText(pdfDoc, i + 1),
+    ),
+  );
+
+  // Identify all content pages by the "External Marks" signal
+  const contentPageIndices = new Set(
+    pageTexts.map((t, i) => (isSubjectStart(t) ? i : -1)).filter((i) => i !== -1),
+  );
+
+  // Find the page matching our subject
+  let targetIdx = -1;
+  for (const i of contentPageIndices) {
+    if (nameMatches(pageTexts[i], subjectName)) {
+      targetIdx = i;
+      break;
     }
-    console.log(
-      `[Ollie] Extracted "${subjectName}": ${parsed.text.length} chars`,
-    );
-    return parsed.text;
-  } catch (err) {
-    // err.stderr contains the Python traceback — log it for easier debugging
-    console.error("[Ollie] extractSubjectSection error:", err.message);
-    if (err.stderr) console.error("[Ollie] Python stderr:", err.stderr.slice(0, 500));
+  }
+
+  if (targetIdx === -1) {
+    console.warn(`[Ollie] Subject page not found for "${subjectName}"`);
     return null;
   }
-}
 
+  // Collect target page + any continuation pages (until next content page)
+  const parts = [pageTexts[targetIdx]];
+  for (let i = targetIdx + 1; i < pageTexts.length; i++) {
+    if (contentPageIndices.has(i)) break;
+    parts.push(pageTexts[i]);
+  }
+
+  const section = parts.join("\n").trim();
+  console.log(`[Ollie] Extracted "${subjectName}": ${section.length} chars`);
+  return section;
+}
 
 // ─── Helper: fetch full context for a user+syllabus combo ────────────────────
 async function getContext(userId, syllabusId) {
@@ -137,7 +190,7 @@ exports.uploadSyllabus = async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "PDF file is required" });
 
   try {
-    // 1. Get subject info first (needed for extraction)
+    // 1. Get subject info first (needed for extraction and language check)
     const subjectRes = await pool.query(
       "SELECT name, code FROM subjects WHERE id = $1",
       [subjectId],
@@ -146,31 +199,27 @@ exports.uploadSyllabus = async (req, res) => {
       return res.status(404).json({ error: "Subject not found" });
     const subject = subjectRes.rows[0];
 
-    // Block language/humanities subjects — they have no unit-based syllabus
-    // that Ollie can meaningfully parse (literature, poems, history essays).
+    // Block language/humanities subjects — no unit-based syllabus to parse
     if (isLanguageSubject(subject.name)) {
       return res.status(400).json({
-        error: `"${subject.name}" is a language/humanities subject and is not supported by Ollie. Only technical subjects with unit-based syllabi can be uploaded.`,
+        error: `"${subject.name}" is a language/humanities subject and is not supported by Ollie.`,
       });
     }
 
-    // 2. Extract this subject's section from the PDF via pdfplumber.
-    //    path.resolve() converts multer's relative path to absolute — required
-    //    because execFileSync's cwd may differ from the project root, which
-    //    breaks relative paths on Windows and some Render configurations.
+    // 2. Extract this subject's section from the PDF using pdfjs-dist (pure Node).
+    //    path.resolve() ensures an absolute path regardless of where Node was started.
     const absolutePdfPath = path.resolve(req.file.path);
-    const section = extractSubjectSection(absolutePdfPath, subject.name);
+    const section = await extractSubjectSection(absolutePdfPath, subject.name);
+
     if (!section || section.trim().length < 100) {
       return res.status(400).json({
         error: `Could not find "${subject.name}" in this PDF. Check the subject name matches the syllabus exactly.`,
       });
     }
 
-    // Store the extracted section text (not the whole PDF) — saves DB space
-    // and means raw_text is always the relevant content for this subject.
-    const rawText = section;
+    const rawText = section; // store only the relevant section, not the whole PDF
 
-    // 3. Ask Groq to parse topics (section is already scoped, 6000 char cap as safety)
+    // 3. Ask Groq to parse topics (section is already scoped; 6000 char cap for safety)
     const truncatedText = section.slice(0, 6000);
     const systemPrompt = buildParsePrompt(subject.name);
 
